@@ -1,0 +1,66 @@
+.login-paper-container {
+  &.MuiPaper-root {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 15px;
+    overflow: hidden;
+  }
+}
+
+.login-left-stack {
+  &.MuiStack-root {
+    display: none;
+  }
+}
+
+.login-right-stack {
+  &.MuiStack-root {
+    padding: 15px;
+  }
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  margin-top: 10px;
+}
+
+@media (min-width: 375px) {
+  .login-paper-container {
+    &.MuiPaper-root {
+      min-width: 350px;
+    }
+  }
+}
+
+@media (min-width: 1024px) {
+  .login-left-stack {
+    &.MuiStack-root {
+      display: flex;
+      max-width: 50%;
+      .login-logo {
+        width: 50%;
+      }
+      .system-title {
+        &.MuiTypography-root {
+          font-size: 30px;
+          font-weight: 600;
+          background-image: linear-gradient(to bottom right, #f36c26, #f48636);
+          background-clip: text;
+          color: transparent;
+        }
+      }
+      .system-sub-title {
+        &.MuiTypography-root {
+          font-size: 30px;
+          font-weight: 400;
+          background-image: linear-gradient(to bottom right, #f36c26, #f48636);
+          background-clip: text;
+          color: transparent;
+          letter-spacing: -2px;
+        }
+      }
+    }
+  }
+}

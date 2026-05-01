@@ -1,0 +1,40 @@
+.mobile-navigation-paper {
+  &.MuiPaper-root {
+    z-index: 3;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    align-self: end;
+    border-radius: 20px 20px 0 0;
+    min-width: 100vw;
+    overflow-y: auto;
+    overflow-x: hidden;
+    height: 10px;
+    transition: all 0.3s ease-in-out;
+  }
+}
+
+.mobile-navigation-paper.open {
+  &.MuiPaper-root {
+    height: 15vh;
+  }
+}
+
+.mobile-navigation-buttom-navigation {
+  &.MuiBottomNavigation-root {
+    margin-top: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 10px;
+  }
+}
+
+@media (min-width: 768px) {
+  .mobile-navigation-paper {
+    &.MuiPaper-root {
+      height: 66px;
+    }
+  }
+}
