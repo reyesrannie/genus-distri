@@ -329,6 +329,7 @@ export const OrderingFields = ({ control, errors, watch, setValue }) => {
         render={({ field }) => (
           <MobileDatePicker
             disabled={approveOrdering || viewOrdering || serveOrdering}
+            disableHighlightToday
             open={openPicker}
             onOpen={() => setOpenPicker(true)}
             onClose={() => setOpenPicker(false)}
@@ -386,7 +387,7 @@ export const OrderingFields = ({ control, errors, watch, setValue }) => {
         helperText={errors?.reg_discount?.message}
       />
       <AppTextBox
-        disabled={approveOrdering || viewOrdering || serveOrdering}
+        disabled={true}
         control={control}
         name="sp_discount"
         label="Sp. Discount"
