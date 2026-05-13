@@ -470,7 +470,7 @@ const OrderingModal = () => {
         "& .MuiDialog-paper": {
           width: "100%",
           maxWidth: "80%",
-          minHeight: "88%",
+          // minHeight: "%",
           maxHeight: "88%",
           borderRadius: 2,
           paddingTop: 2,

@@ -466,7 +466,7 @@ const OrderingProducts = ({ watch, control, errors, setValue }) => {
           </Button>
         )}
       </Stack>
-      <Stack alignItems="flex-end">
+      {/* <Stack alignItems="flex-end">
         <Box
           sx={{
             width: "300px",
@@ -537,7 +537,7 @@ const OrderingProducts = ({ watch, control, errors, setValue }) => {
             </Stack>
           </Stack>
         </Box>
-      </Stack>
+      </Stack> */}
       <EnterRemarks
         currentValue={watch(`order.${selectedIndex}.remarks`)}
         open={openRemarks}

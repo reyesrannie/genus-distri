@@ -176,7 +176,7 @@ export const OrderingFields = ({ control, errors, watch, setValue }) => {
         )}
       />
 
-      <Autocomplete
+      {/* <Autocomplete
         disabled={
           approveOrdering ||
           viewOrdering ||
@@ -224,7 +224,7 @@ export const OrderingFields = ({ control, errors, watch, setValue }) => {
             helperText={errors.charging?.message}
           />
         )}
-      />
+      /> */}
       <Autocomplete
         disabled={
           approveOrdering ||
@@ -333,7 +333,7 @@ export const OrderingFields = ({ control, errors, watch, setValue }) => {
             open={openPicker}
             onOpen={() => setOpenPicker(true)}
             onClose={() => setOpenPicker(false)}
-            minDate={dayjs().add(5, "day")}
+            minDate={dayjs().add(3, "day")}
             maxDate={dayjs().add(1, "year")}
             label="Date Needed"
             value={field.value}
