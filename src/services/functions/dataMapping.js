@@ -341,7 +341,6 @@ export const mapOrderingData = (
     date_needed: dayjs(new Date(ordering?.date_needed)),
     ...customerInfo,
     order: ordering?.order?.map((item) => {
-      console.log(item);
       const material = productData?.find(
         (mats) => mats?.itemCode === item?.material?.code,
       );

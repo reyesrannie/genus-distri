@@ -28,10 +28,13 @@ import { Controller } from "react-hook-form";
 import { MobileDatePicker } from "@mui/x-date-pickers/MobileDatePicker";
 import dayjs from "dayjs";
 import { enqueueSnackbar } from "notistack";
+import { getMinDateOffset } from "../../../services/constant/checkValue";
+import { date } from "yup";
 
 export const OrderingFields = ({ control, errors, watch, setValue }) => {
   const dispatch = useDispatch();
   const [openPicker, setOpenPicker] = useState(false);
+  const [openPickerTwo, setOpenPickerTwo] = useState(false);
 
   const chargingUser = getCustomer();
   const chargingData = useSelector((state) => state.values.chargingData);
@@ -42,6 +45,7 @@ export const OrderingFields = ({ control, errors, watch, setValue }) => {
   const approveOrdering = useSelector((state) => state.modal.approveOrdering);
   const serveOrdering = useSelector((state) => state.modal.serveOrdering);
   const viewOrdering = useSelector((state) => state.modal.viewOrdering);
+  const poOrder = useSelector((state) => state.modal.poOrder);
 
   const { params: paramsCharging } = useParamsHook();
   const { params: paramsType } = useArcanaParamsHook();
@@ -49,11 +53,13 @@ export const OrderingFields = ({ control, errors, watch, setValue }) => {
   const [getCharging, { data: chargingFetch }] = useLazyOneChargingQuery();
   const { data: charging } = useOneChargingQuery(paramsCharging);
   const { data: type } = useTypeQuery(paramsType);
+
   const [getType, { data: typeFetch }] = useLazyTypeQuery();
   const [getTdo, { isFetching: tdoFetch }] = useLazyTdoQuery();
 
   const [getCustomerArcana, { isFetching: fetchArcanaCustomer }] =
     useLazyCustomerQuery();
+
   const [getProduct, { isError: errorProduct }] = useLazyProductQuery();
 
   useEffect(() => {
@@ -322,6 +328,7 @@ export const OrderingFields = ({ control, errors, watch, setValue }) => {
           />
         )}
       />
+
       <Controller
         disabled={approveOrdering || viewOrdering || serveOrdering}
         control={control}
@@ -332,13 +339,17 @@ export const OrderingFields = ({ control, errors, watch, setValue }) => {
             disableHighlightToday
             open={openPicker}
             onOpen={() => setOpenPicker(true)}
-            onClose={() => setOpenPicker(false)}
-            minDate={dayjs().add(3, "day")}
+            onClose={() => {
+              setOpenPicker(false);
+            }}
+            minDate={dayjs().add(getMinDateOffset(), "day")}
             maxDate={dayjs().add(1, "year")}
             label="Date Needed"
             value={field.value}
+            closeOnSelect
             onChange={(newValue) => {
               field.onChange(newValue);
+              setValue("final_delivery_date", null);
             }}
             slotProps={{
               textField: {
@@ -361,6 +372,60 @@ export const OrderingFields = ({ control, errors, watch, setValue }) => {
           />
         )}
       />
+      {poOrder && (
+        <Controller
+          disabled={
+            approveOrdering ||
+            viewOrdering ||
+            serveOrdering ||
+            watch("date_needed") === null
+          }
+          control={control}
+          name="last_delivery_date"
+          render={({ field }) => (
+            <MobileDatePicker
+              disabled={
+                approveOrdering ||
+                viewOrdering ||
+                serveOrdering ||
+                watch("date_needed") === null
+              }
+              disableHighlightToday
+              open={openPickerTwo}
+              onOpen={() => setOpenPickerTwo(true)}
+              onClose={() => setOpenPickerTwo(false)}
+              minDate={dayjs(watch("date_needed")).add(1, "day")}
+              maxDate={dayjs().add(2, "year")}
+              label="Final Delivery Deadline"
+              value={field.value}
+              onChange={(newValue) => {
+                field.onChange(newValue);
+              }}
+              slotProps={{
+                textField: {
+                  size: "small",
+                  InputProps: {
+                    style: {
+                      fontSize: "12px",
+                      paddingTop: "3px",
+                      paddingBottom: "3px",
+
+                      borderRadius: "6px",
+                    },
+                  },
+                  onClick: () =>
+                    !approveOrdering &&
+                    !viewOrdering &&
+                    watch("date_needed") !== null &&
+                    setOpenPickerTwo(true),
+                  error: Boolean(errors?.date_needed),
+                  helperText: errors?.date_needed?.message,
+                },
+              }}
+            />
+          )}
+        />
+      )}
       <AppTextBox
         disabled={true}
         control={control}

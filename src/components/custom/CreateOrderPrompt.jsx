@@ -243,9 +243,9 @@ const CreateOrderPrompt = ({ resetFn = () => {} }) => {
           <Stack>
             <Stack
               justifyContent={"space-between"}
-              flexDirection={"row-reverse"}
+              // flexDirection={"row-reverse"}
             >
-              <Box
+              {/* <Box
                 sx={{
                   width: "300px",
                   p: 2,
@@ -322,7 +322,7 @@ const CreateOrderPrompt = ({ resetFn = () => {} }) => {
                     </Typography>
                   </Stack>
                 </Stack>
-              </Box>
+              </Box> */}
               <Stack>
                 <Typography>{`Date Needed: ${payloadData?.date_needed}`}</Typography>
                 <Typography>{`Customer Code: ${payloadData?.customer?.code}`}</Typography>

@@ -3,8 +3,18 @@ import React from "react";
 
 import AddOutlinedIcon from "@mui/icons-material/AddOutlined";
 import ImportExportOutlinedIcon from "@mui/icons-material/ImportExportOutlined";
+import AddShoppingCartOutlinedIcon from "@mui/icons-material/AddShoppingCartOutlined";
+import FormatListNumberedOutlinedIcon from "@mui/icons-material/FormatListNumberedOutlined";
 
-const MenuOptions = ({ anchorEl, setAnchorEl, addOption, importOption }) => {
+const MenuOptions = ({
+  anchorEl,
+  setAnchorEl,
+  addOption,
+  importOption,
+  orderOption,
+  poOrderOption,
+  ordering = false,
+}) => {
   return (
     <Menu
       open={Boolean(anchorEl)}
@@ -16,18 +26,38 @@ const MenuOptions = ({ anchorEl, setAnchorEl, addOption, importOption }) => {
         setAnchorEl(null);
       }}
     >
-      <MenuItem onClick={addOption}>
-        <ListItemIcon>
-          <AddOutlinedIcon fontSize="small" />
-        </ListItemIcon>
-        <ListItemText>Add</ListItemText>
-      </MenuItem>
-      <MenuItem onClick={importOption}>
-        <ListItemIcon>
-          <ImportExportOutlinedIcon fontSize="small" />
-        </ListItemIcon>
-        <ListItemText>Import</ListItemText>
-      </MenuItem>
+      {!ordering && (
+        <MenuItem onClick={addOption}>
+          <ListItemIcon>
+            <AddOutlinedIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Add</ListItemText>
+        </MenuItem>
+      )}
+      {!ordering && (
+        <MenuItem onClick={importOption}>
+          <ListItemIcon>
+            <ImportExportOutlinedIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Import</ListItemText>
+        </MenuItem>
+      )}
+      {ordering && (
+        <MenuItem onClick={orderOption}>
+          <ListItemIcon>
+            <AddShoppingCartOutlinedIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Order</ListItemText>
+        </MenuItem>
+      )}
+      {ordering && (
+        <MenuItem onClick={poOrderOption}>
+          <ListItemIcon>
+            <FormatListNumberedOutlinedIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>P.O Order</ListItemText>
+        </MenuItem>
+      )}
     </Menu>
   );
 };

@@ -10,6 +10,7 @@ import {
   Box,
   Chip,
   DialogActions,
+  DialogTitle,
 } from "@mui/material";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -80,6 +81,7 @@ import {
 import { OrderingFields } from "../pages/order/OrderingFields";
 import OrderingProducts from "../pages/order/OrderingProducts";
 import MobileLoading from "../custom/MobileLoading";
+import { canUpdateOrder } from "../../services/constant/checkValue";
 
 const OrderingModal = () => {
   const dispatch = useDispatch();
@@ -94,6 +96,8 @@ const OrderingModal = () => {
   const updateOrdering = useSelector((state) => state.modal.updateOrdering);
   const approveOrdering = useSelector((state) => state.modal.approveOrdering);
   const serveOrdering = useSelector((state) => state.modal.serveOrdering);
+  const poOrder = useSelector((state) => state.modal.poOrder);
+
   const productData = useSelector((state) => state.values.productData);
   const tdoData = useSelector((state) => state.values.tdoData);
 
@@ -141,6 +145,7 @@ const OrderingModal = () => {
       tdo: null,
       customer: null,
       date_needed: null,
+      final_delivery_date: null,
       customer_address: "",
       branch_name: "",
       delivery_address: "",
@@ -470,17 +475,35 @@ const OrderingModal = () => {
         "& .MuiDialog-paper": {
           width: "100%",
           maxWidth: "80%",
-          // minHeight: "%",
           maxHeight: "88%",
           borderRadius: 2,
-          paddingTop: 2,
         },
       }}
     >
+      <DialogTitle
+        sx={{
+          backgroundColor: "primary.main",
+          display: "flex",
+          justifyContent: "center",
+        }}
+      >
+        <Typography
+          sx={{
+            fontSize: 20,
+            fontWeight: 600,
+            color: "white",
+          }}
+        >
+          {poOrder ? "PO Order" : "Order"}
+        </Typography>
+      </DialogTitle>
       <form onSubmit={handleSubmit(submitHandler)}>
         <DialogContent>
           <Stack position={"absolute"} top={0} right={2}>
             <IconButton
+              sx={{
+                color: "white",
+              }}
               onClick={() => {
                 dispatch(setWarning(true));
               }}
@@ -531,6 +554,7 @@ const OrderingModal = () => {
                     color="success"
                     type="submit"
                     disabled={
+                      !canUpdateOrder(watch("date_needed")) ||
                       fields.length === 0 ||
                       (watch("order") || []).some(
                         (item) =>
@@ -542,7 +566,8 @@ const OrderingModal = () => {
                       watch("date_needed") === null ||
                       watch("charging") === null ||
                       watch("customer") === null ||
-                      loadingProduct
+                      loadingProduct ||
+                      (poOrder && !watch("final_delivery_date") !== null)
                     }
                     startIcon={<ShoppingCartCheckoutOutlinedIcon />}
                     size="small"

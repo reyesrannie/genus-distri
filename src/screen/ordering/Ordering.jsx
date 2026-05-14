@@ -17,6 +17,7 @@ import OrderStatusChanger from "../../components/custom/OrderStatusChanger";
 import {
   setCreateOrdering,
   setOrdering,
+  setPoOrder,
   setPrintableModal,
   setUpdateOrdering,
   setViewOrdering,
@@ -34,11 +35,13 @@ import AppPrompt from "../../components/custom/AppPrompt";
 import warning from "../../assets/svg/warning.svg";
 import CreateOrderPrompt from "../../components/custom/CreateOrderPrompt";
 import TransactionPrint from "../../components/custom/TransactionPrint";
+import MenuOptions from "../../components/custom/MenuOptions";
 
 const Ordering = () => {
   const dispatch = useDispatch();
 
   const [anchorEl, setAnchorEl] = useState(null);
+  const [anchorE2, setAnchorE2] = useState(null);
 
   const viewRemarks = useSelector((state) => state.prompt.viewRemarks);
   const ordering = useSelector((state) => state.modal.ordering);
@@ -134,7 +137,10 @@ const Ordering = () => {
           variant="contained"
           startIcon={<LibraryAddOutlinedIcon />}
           onClick={(e) => {
-            dispatch(setCreateOrdering(true));
+            setAnchorE2({
+              mouseX: e.clientX,
+              mouseY: e.clientY,
+            });
           }}
         >
           New
@@ -204,17 +210,26 @@ const Ordering = () => {
           setAnchorEl(null);
           dispatch(setUpdateOrdering(true));
         }}
-        // {...(params.status === "pending" && {
-        //   archive: () => {
-        //     setAnchorEl(null);
-        //     dispatch(setArchive(true));
-        //   },
-        // })}
       />
 
       <OrderingModal />
       {/* <CreateOrderPrompt /> */}
       <TransactionPrint />
+
+      <MenuOptions
+        ordering
+        anchorEl={anchorE2}
+        setAnchorEl={setAnchorE2}
+        orderOption={() => {
+          dispatch(setCreateOrdering(true));
+          setAnchorE2(null);
+        }}
+        poOrderOption={() => {
+          dispatch(setPoOrder(true));
+          dispatch(setCreateOrdering(true));
+          setAnchorE2(null);
+        }}
+      />
 
       <AppPrompt
         open={viewRemarks}

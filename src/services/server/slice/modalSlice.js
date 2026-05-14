@@ -1,4 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
+import { set } from "react-hook-form";
 
 const initialState = {
   searchCount: 0,
@@ -36,6 +37,7 @@ const initialState = {
   orderingModal: false,
   ordering: null,
   orders: null,
+  poOrder: false,
   selectedIndex: null,
   viewOrdering: false,
   approverModal: false,
@@ -141,6 +143,9 @@ const modalSlice = createSlice({
     setOrderType: (state, action) => {
       state.orderType = action.payload;
     },
+    setPoOrder: (state, action) => {
+      state.poOrder = action.payload;
+    },
     setCustomerModal: (state, action) => {
       state.customerModal = action.payload;
     },
@@ -225,6 +230,7 @@ export const {
   setOrderingModal,
   setOrdering,
   setOrders,
+  setPoOrder,
   setSelectedIndex,
   setApproverModal,
   setViewOrdering,
