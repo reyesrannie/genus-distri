@@ -29,6 +29,9 @@ import { exportExcel } from "../../services/functions/reusableFunctions";
 import { exportHeader } from "../../services/constant/systemConstants";
 import { enqueueSnackbar } from "notistack";
 import AppDateFilter from "../../components/custom/AppDateFilter";
+import ClearOutlinedIcon from "@mui/icons-material/ClearOutlined";
+import LocalPrintshopOutlinedIcon from "@mui/icons-material/LocalPrintshopOutlined";
+import { resetPrompt } from "../../services/server/slice/promptSlice";
 
 const OrderTaker = () => {
   const dispatch = useDispatch();
@@ -37,6 +40,7 @@ const OrderTaker = () => {
   const [anchorE2, setAnchorE2] = useState(null);
 
   const filter = useSelector((state) => state.prompt.filter);
+  const orders = useSelector((state) => state.prompt.orders);
 
   const {
     params,
@@ -61,6 +65,7 @@ const OrderTaker = () => {
   ];
 
   const tableHeader = [
+    { name: "", type: "select", value: "status", status: "CONSOLIDATED" },
     {
       name: "Mir",
       value: "id",
@@ -111,7 +116,7 @@ const OrderTaker = () => {
       await exportExcel(
         res?.result,
         exportHeader,
-        header?.find((h) => params?.status === h?.value)?.label
+        header?.find((h) => params?.status === h?.value)?.label,
       );
     } catch (error) {
       enqueueSnackbar("Something went wrong while exporting data", {
@@ -186,13 +191,39 @@ const OrderTaker = () => {
         />
       )}
       {isSuccess && (
-        <Stack alignItems={"flex-start"} pt={1}>
+        <Stack flexDirection={"row"} alignItems={"flex-start"} pt={1} gap={1}>
+          {orders?.length !== 0 && (
+            <Button
+              loading={loadingExport}
+              onClick={() => dispatch(resetPrompt())}
+              variant="contained"
+              startIcon={<ClearOutlinedIcon />}
+              color="warning"
+              size="small"
+            >
+              Clear Selection
+            </Button>
+          )}
+
+          {orders?.length !== 0 && (
+            <Button
+              loading={loadingExport}
+              onClick={() => dispatch(setPrintableModal(true))}
+              variant="contained"
+              startIcon={<LocalPrintshopOutlinedIcon />}
+              color="info"
+              size="small"
+            >
+              Print Selected
+            </Button>
+          )}
           <Button
             loading={loadingExport}
             onClick={() => handleExport()}
             variant="contained"
             startIcon={<GetAppIcon />}
             color="success"
+            size="small"
           >
             Export
           </Button>

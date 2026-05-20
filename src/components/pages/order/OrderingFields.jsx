@@ -30,6 +30,7 @@ import dayjs from "dayjs";
 import { enqueueSnackbar } from "notistack";
 import { getMinDateOffset } from "../../../services/constant/checkValue";
 import { date } from "yup";
+import { setForApproval } from "../../../services/server/slice/modalSlice";
 
 export const OrderingFields = ({ control, errors, watch, setValue }) => {
   const dispatch = useDispatch();
@@ -255,18 +256,32 @@ export const OrderingFields = ({ control, errors, watch, setValue }) => {
             creditType,
             remainingCredits: c,
             remainingDays: d,
+            creditLimit,
+            remainigDayAllowance,
+            remainingDayLimit,
+            remainingCreditLimit,
+            remainingCreditAllowance,
           } = option || {};
 
           if (isCOD) {
             statusText = false;
           } else if (creditType === "Credit - Days") {
-            statusText = d <= 0 ? true : false;
+            statusText =
+              d <= 0 && remainigDayAllowance <= 0 && remainingDayLimit <= 0
+                ? true
+                : false;
           } else if (
             creditType === "Regular Credit" ||
             creditType === "Credit - Amount"
           ) {
             const limitReached =
-              c <= 0 || (creditType === "Regular Credit" && d <= 0);
+              (c <= 0 &&
+                remainingCreditLimit <= 0 &&
+                remainingCreditAllowance <= 0) ||
+              (creditType === "Regular Credit" &&
+                d <= 0 &&
+                remainigDayAllowance <= 0 &&
+                remainingDayLimit <= 0);
             statusText = limitReached ? true : false;
           }
 
@@ -281,22 +296,38 @@ export const OrderingFields = ({ control, errors, watch, setValue }) => {
             creditType,
             remainingCredits: c,
             remainingDays: d,
+            creditLimit,
+            remainigDayAllowance,
+            remainingDayLimit,
+            remainingCreditLimit,
+            remainingCreditAllowance,
           } = option || {};
           let statusText = "";
 
           if (isCOD) {
             statusText = "COD";
           } else if (creditType === "Credit - Days") {
-            statusText = d <= 0 ? "Limit Reached" : `${d} day(s) left`;
+            statusText =
+              d <= 0 && remainigDayAllowance <= 0 && remainingDayLimit <= 0
+                ? "Limit Reached"
+                : `${d} day(s) left`;
           } else if (
             creditType === "Regular Credit" ||
             creditType === "Credit - Amount"
           ) {
             const limitReached =
-              c <= 0 || (creditType === "Regular Credit" && d <= 0);
+              (c <= 0 &&
+                remainingCreditLimit <= 0 &&
+                remainingCreditAllowance <= 0) ||
+              (creditType === "Regular Credit" &&
+                d <= 0 &&
+                remainigDayAllowance <= 0 &&
+                remainingDayLimit <= 0);
             statusText = limitReached
               ? "Limit Reached"
-              : `₱${c?.toLocaleString()}`;
+              : creditType === "Regular Credit"
+                ? `₱${(c + remainingCreditAllowance + remainingCreditLimit)?.toLocaleString()} , ${d + remainingDayLimit + remainigDayAllowance} day(s) left`
+                : `₱${(c + remainingCreditAllowance + remainingCreditLimit)?.toLocaleString()}`;
           }
 
           return statusText
@@ -310,7 +341,6 @@ export const OrderingFields = ({ control, errors, watch, setValue }) => {
         onClose={async () => {
           dispatch(setProductData([]));
           autoFillFields(watch("customer"));
-
           getProduct({
             isActive: true,
             PageSize: 100,

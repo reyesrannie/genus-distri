@@ -108,6 +108,7 @@ const OrderingModal = () => {
   const selectedIndex = useSelector((state) => state.modal.selectedIndex);
   const chargingData = useSelector((state) => state.values.chargingData);
   const warning = useSelector((state) => state.prompt.warning);
+  const forApproval = useSelector((state) => state.modal.forApproval);
 
   const loadingProduct = useSelector((state) => state.modal.isLoading);
 
@@ -145,7 +146,7 @@ const OrderingModal = () => {
       tdo: null,
       customer: null,
       date_needed: null,
-      final_delivery_date: null,
+      last_delivery_date: null,
       customer_address: "",
       branch_name: "",
       delivery_address: "",
@@ -174,14 +175,18 @@ const OrderingModal = () => {
   const submitHandler = async (submitData) => {
     const items = {
       ...submitData,
+      order_type: poOrder ? "BATCHING" : "REGULAR",
       charging: approveOrdering
         ? submitData?.charging
         : chargingData?.find(
             (charge) => charge?.code === submitData?.charging?.charging_code,
           ),
     };
+
     const payload = {
-      ...mapOrderingPayload(items),
+      ...mapOrderingPayload({
+        ...items,
+      }),
       id: ordering !== null ? ordering?.id : null,
     };
 
@@ -193,7 +198,10 @@ const OrderingModal = () => {
 
   const handleServe = async () => {
     const payload = {
-      ...mapOrderingPayload(getValues()),
+      ...mapOrderingPayload({
+        ...getValues(),
+        order_type: poOrder ? "BATCHING" : "REGULAR",
+      }),
       id: ordering !== null ? ordering?.id : null,
     };
 
@@ -204,7 +212,10 @@ const OrderingModal = () => {
 
   const handleReturn = async () => {
     const payload = {
-      ...mapOrderingPayload(getValues()),
+      ...mapOrderingPayload({
+        ...getValues(),
+        order_type: poOrder ? "BATCHING" : "REGULAR",
+      }),
       id: ordering !== null ? ordering?.id : null,
     };
     dispatch(setPayloadData(payload));
@@ -213,7 +224,10 @@ const OrderingModal = () => {
 
   const handleReject = async () => {
     const payload = {
-      ...mapOrderingPayload(getValues()),
+      ...mapOrderingPayload({
+        ...getValues(),
+        order_type: poOrder ? "BATCHING" : "REGULAR",
+      }),
       customer: { ...ordering?.customer },
 
       id: ordering !== null ? ordering?.id : null,
@@ -367,6 +381,13 @@ const OrderingModal = () => {
       setValue("type", {
         id: watch("tdo")?.distributionTypeId,
         name: watch("tdo")?.distributionType,
+      });
+
+      getClient({
+        isActive: true,
+        PageSize: 100,
+        DistriTypeId: watch("tdo")?.distributionTypeId,
+        TDOId: watch("tdo")?.id,
       });
     }
   }, [ordering, tdoData]);
@@ -567,7 +588,7 @@ const OrderingModal = () => {
                       watch("charging") === null ||
                       watch("customer") === null ||
                       loadingProduct ||
-                      (poOrder && !watch("final_delivery_date") !== null)
+                      (poOrder && watch("last_delivery_date") === null)
                     }
                     startIcon={<ShoppingCartCheckoutOutlinedIcon />}
                     size="small"

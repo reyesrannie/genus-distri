@@ -38,6 +38,8 @@ const initialState = {
   ordering: null,
   orders: null,
   poOrder: false,
+  viewBatch: false,
+  forApproval: false,
   selectedIndex: null,
   viewOrdering: false,
   approverModal: false,
@@ -146,6 +148,12 @@ const modalSlice = createSlice({
     setPoOrder: (state, action) => {
       state.poOrder = action.payload;
     },
+    setViewBatch: (state, action) => {
+      state.viewBatch = action.payload;
+    },
+    setForApproval: (state, action) => {
+      state.forApproval = action.payload;
+    },
     setCustomerModal: (state, action) => {
       state.customerModal = action.payload;
     },
@@ -231,6 +239,7 @@ export const {
   setOrdering,
   setOrders,
   setPoOrder,
+  setViewBatch,
   setSelectedIndex,
   setApproverModal,
   setViewOrdering,
@@ -239,6 +248,7 @@ export const {
   setApproveOrdering,
   setServeOrdering,
   setPrintableModal,
+  setForApproval,
   setHasRun,
   resetModal,
 } = modalSlice.actions;

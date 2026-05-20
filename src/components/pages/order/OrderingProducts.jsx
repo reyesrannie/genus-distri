@@ -13,7 +13,10 @@ import { useDispatch, useSelector } from "react-redux";
 import { useLazyProductQuery } from "../../../services/server/api/arcana/arcanaAPI";
 import { useDebounceCallback } from "../../../services/hooks/useDebounceCallBack";
 import AppTextBox from "../../custom/AppTextBox";
-import { setSelectedIndex } from "../../../services/server/slice/modalSlice";
+import {
+  setForApproval,
+  setSelectedIndex,
+} from "../../../services/server/slice/modalSlice";
 import EnterRemarks from "../../custom/EnterRemarks";
 import RemoveCircleOutlineOutlinedIcon from "@mui/icons-material/RemoveCircleOutlineOutlined";
 import { useFieldArray } from "react-hook-form";
@@ -106,6 +109,50 @@ const OrderingProducts = ({ watch, control, errors, setValue }) => {
   const isAmountExceeded = hasAmountLimit && customer?.remainingCredits <= 0;
   const isDaysExceeded = hasDaysLimit && customer?.hasRemainingDays === false;
   const canOrder = isCOD ? true : !(isAmountExceeded || isDaysExceeded);
+
+  const handleItemForApproval = (total) => {
+    const {
+      creditType,
+      remainingCredits: c,
+      remainingDays: d,
+      creditLimit,
+      remainigDayAllowance,
+      remainingDayLimit,
+      remainingCreditLimit,
+      remainingCreditAllowance,
+    } = watch("customer") || {};
+
+    const isCOD = watch("customer")?.creditType === null;
+    if (isCOD) {
+      dispatch(setForApproval(false));
+    } else if (creditType === "Credit - Days") {
+      dispatch(
+        setForApproval(
+          d <= 0 && remainigDayAllowance <= 0 && remainingDayLimit <= 0
+            ? true
+            : false,
+        ),
+      );
+    } else if (
+      creditType === "Regular Credit" ||
+      creditType === "Credit - Amount"
+    ) {
+      dispatch(
+        setForApproval(
+          (c <= 0 &&
+            remainingCreditLimit <= 0 &&
+            remainingCreditAllowance <= 0) ||
+            (creditType === "Regular Credit" &&
+              d <= 0 &&
+              remainigDayAllowance <= 0 &&
+              remainingDayLimit <= 0) ||
+            total > c
+            ? true
+            : false,
+        ),
+      );
+    }
+  };
 
   return (
     <Stack gap={1}>
@@ -250,12 +297,10 @@ const OrderingProducts = ({ watch, control, errors, setValue }) => {
                         return sum + itemPrice * itemQty;
                       }, 0);
 
-                    const projectedVat = projectedTotalAmount * 0.12;
                     const projectedDiscount =
-                      (projectedTotalAmount + projectedVat) *
-                      (discountPercentage / 100);
+                      projectedTotalAmount * (discountPercentage / 100);
                     const projectedGrandTotal =
-                      projectedTotalAmount + projectedVat - projectedDiscount;
+                      projectedTotalAmount - projectedDiscount;
 
                     // --- LOGIC APPLIED HERE AS WELL ---
                     const isCOD = customer?.terms === "COD";
@@ -264,13 +309,22 @@ const OrderingProducts = ({ watch, control, errors, setValue }) => {
                     if (
                       !isCOD &&
                       hasAmountLimit &&
-                      projectedGrandTotal > customer?.remainingCredits
+                      projectedGrandTotal >
+                        customer?.remainingCredits +
+                          customer?.remainingCreditAllowance +
+                          customer?.remainingCreditLimit
                     ) {
                       setValue(`order.${index}.quantity`, "");
                       setValue(`order.${index}.selling_price`, "");
 
                       enqueueSnackbar(
-                        `Credit limit reached! Available balance: ₱${customer?.remainingCredits?.toLocaleString("en-US", { minimumFractionDigits: 2 })}`,
+                        `Credit limit reached! Available balance: ₱${(
+                          customer?.remainingCredits +
+                          customer?.remainingCreditAllowance +
+                          customer?.remainingCreditLimit
+                        )?.toLocaleString("en-US", {
+                          minimumFractionDigits: 2,
+                        })}`,
                         { variant: "warning" },
                       );
                     } else {
@@ -281,6 +335,7 @@ const OrderingProducts = ({ watch, control, errors, setValue }) => {
                           maximumFractionDigits: 2,
                         },
                       );
+                      handleItemForApproval(projectedGrandTotal);
                       setValue(`order.${index}.selling_price`, formattedTotal);
                     }
                   }}
@@ -334,12 +389,10 @@ const OrderingProducts = ({ watch, control, errors, setValue }) => {
                         return sum + itemPrice * itemQty;
                       }, 0);
 
-                    const projectedVat = projectedTotalAmount * 0.12;
                     const projectedDiscount =
-                      (projectedTotalAmount + projectedVat) *
-                      (discountPercentage / 100);
+                      projectedTotalAmount * (discountPercentage / 100);
                     const projectedGrandTotal =
-                      projectedTotalAmount + projectedVat - projectedDiscount;
+                      projectedTotalAmount - projectedDiscount;
 
                     // --- LOGIC APPLIED HERE AS WELL ---
                     const isCOD = customer?.terms === "COD";
@@ -348,13 +401,24 @@ const OrderingProducts = ({ watch, control, errors, setValue }) => {
                     if (
                       !isCOD &&
                       hasAmountLimit &&
-                      projectedGrandTotal > customer?.remainingCredits
+                      projectedGrandTotal >
+                        customer?.remainingCredits +
+                          customer?.remainingCreditAllowance +
+                          customer?.remainingCreditLimit
                     ) {
                       setValue(`order.${index}.quantity`, "");
                       setValue(`order.${index}.selling_price`, "");
 
+                      //dito lagay yung for approval
+
                       enqueueSnackbar(
-                        `Credit limit reached! Available balance: ₱${customer?.remainingCredits?.toLocaleString("en-US", { minimumFractionDigits: 2 })}`,
+                        `Credit limit reached! Available balance: ₱${(
+                          customer?.remainingCredits +
+                          customer?.remainingCreditAllowance +
+                          customer?.remainingCreditLimit
+                        )?.toLocaleString("en-US", {
+                          minimumFractionDigits: 2,
+                        })}`,
                         { variant: "warning" },
                       );
                     } else {
@@ -365,6 +429,7 @@ const OrderingProducts = ({ watch, control, errors, setValue }) => {
                           maximumFractionDigits: 2,
                         },
                       );
+                      handleItemForApproval(projectedGrandTotal);
                       setValue(`order.${index}.selling_price`, formattedTotal);
                     }
                   }}

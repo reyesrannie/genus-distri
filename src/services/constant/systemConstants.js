@@ -17,6 +17,10 @@ const userRoles = [
     name: "Masterlist",
     child: [
       {
+        name: "Approver Setup",
+        value: "approver_setup",
+      },
+      {
         name: "Account Title",
         value: "account_title",
       },

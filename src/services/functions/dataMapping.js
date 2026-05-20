@@ -5,7 +5,13 @@ export const mapOrderingPayload = (submitData) => {
     order_no: submitData.order_no,
     rush: submitData.rush,
     reason: submitData.reason,
+    status: submitData.status,
     date_needed: dayjs(submitData.date_needed).format("YYYY-MM-DD"),
+    last_delivery_date: dayjs(submitData.last_date_delivery).format(
+      "YYYY-MM-DD",
+    ),
+
+    order_type: submitData.order_type,
     customer: {
       id: submitData?.customer?.id,
       code: submitData?.customer?.id,

@@ -12,6 +12,8 @@ const initialState = {
   warning: false,
   isNotMatched: false,
   filter: null,
+  multiple: false,
+  orders: [],
 };
 
 const promptSlice = createSlice({
@@ -51,6 +53,12 @@ const promptSlice = createSlice({
     setFilter: (state, action) => {
       state.filter = action.payload;
     },
+    setMultiple: (state, action) => {
+      state.multiple = action.payload;
+    },
+    setOrders: (state, action) => {
+      state.orders = action.payload;
+    },
     resetPrompt: () => {
       return initialState;
     },
@@ -69,6 +77,8 @@ export const {
   setWarning,
   setIsNotMatch,
   setFilter,
+  setMultiple,
+  setOrders,
   resetPrompt,
 } = promptSlice.actions;
 

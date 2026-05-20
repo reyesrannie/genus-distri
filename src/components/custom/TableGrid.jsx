@@ -1,4 +1,5 @@
 import {
+  Checkbox,
   Chip,
   IconButton,
   Stack,
@@ -15,6 +16,8 @@ import dayjs from "dayjs";
 // import "../styles/TableGrid.scss";
 
 import InsertLinkOutlinedIcon from "@mui/icons-material/InsertLinkOutlined";
+import { useDispatch, useSelector } from "react-redux";
+import { setOrders } from "../../services/server/slice/promptSlice";
 
 const TableGrid = ({
   header = [],
@@ -23,6 +26,10 @@ const TableGrid = ({
   onView,
   multipleView,
 }) => {
+  const dispatch = useDispatch();
+
+  const orders = useSelector((state) => state.prompt.orders);
+
   return (
     <TableContainer>
       <Table>
@@ -39,16 +46,50 @@ const TableGrid = ({
         </TableHead>
         <TableBody>
           {items?.data?.map((i, ind) => {
+            const order = orders?.find((o) => o.id === i.id);
+
             return (
               <TableRow
                 key={ind}
                 onClick={(e) => {
-                  onSelect(e, i);
+                  if (orders?.length === 0) {
+                    onSelect(e, i);
+                  } else {
+                    e.stopPropagation();
+                    if (order) {
+                      dispatch(setOrders(orders?.filter((o) => o.id !== i.id)));
+                    } else {
+                      dispatch(setOrders([...orders, i]));
+                    }
+                  }
                 }}
               >
                 {header?.map((head, index) => {
                   return (
-                    <TableCell key={index} align={head?.alignHeader}>
+                    <TableCell
+                      key={index}
+                      align={head?.alignHeader}
+                      onClick={(e) => {
+                        head?.type === "select" && e.stopPropagation();
+                      }}
+                    >
+                      {head?.type === "select" &&
+                        i[head.value] === head?.status && (
+                          <Checkbox
+                            checked={!!order}
+                            onChange={() => {
+                              if (order) {
+                                dispatch(
+                                  setOrders(
+                                    orders?.filter((o) => o.id !== i.id),
+                                  ),
+                                );
+                              } else {
+                                dispatch(setOrders([...orders, i]));
+                              }
+                            }}
+                          />
+                        )}
                       {head?.type === undefined && (
                         <Typography>{i[head?.value]}</Typography>
                       )}
@@ -68,7 +109,7 @@ const TableGrid = ({
                                 return: "#FFE4E1",
                                 rejected: "#FFE4E1",
                                 served: "#EDE9FE",
-                                consolidated: "#D1FAE5",
+                                consolidated: "#E0E7FF",
                                 "ready for preparation": "#FEF3C7",
                                 "ready to sync": "#E0F2FE",
                                 "ready to pick-up": "#E7F5FF",
@@ -83,7 +124,7 @@ const TableGrid = ({
                                 completed: "#1E40AF",
                                 return: "#B22222",
                                 rejected: "#B22222",
-                                consolidated: "#065F46",
+                                consolidated: "#3730A3",
                                 "ready for preparation": "#92400E",
                                 "ready to sync": "#0284C7",
                                 "ready to pick-up": "#0369A1",
@@ -99,7 +140,7 @@ const TableGrid = ({
                                 completed: "#60A5FA",
                                 return: "#FF7F7F",
                                 rejected: "#FF7F7F",
-                                consolidated: "#34D399",
+                                consolidated: "#A5B4FC",
                                 "ready for preparation": "#FBBF24",
                                 "ready to sync": "#7DD3FC",
                                 "ready to pick-up": "#38BDF8",
@@ -126,7 +167,7 @@ const TableGrid = ({
                       {head?.type === "time" && (
                         <Typography>
                           {dayjs(
-                            `${dayjs().format("YYYY-MM-DD")}T${i[head?.value]}`
+                            `${dayjs().format("YYYY-MM-DD")}T${i[head?.value]}`,
                           ).format("hh:mm a")}
                         </Typography>
                       )}
@@ -134,7 +175,7 @@ const TableGrid = ({
                       {head?.type === "date" && (
                         <Typography>
                           {moment(new Date(i[head?.value])).format(
-                            "MMM DD, YYYY"
+                            "MMM DD, YYYY",
                           )}
                         </Typography>
                       )}

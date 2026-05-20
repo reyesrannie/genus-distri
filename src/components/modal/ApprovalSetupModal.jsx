@@ -58,7 +58,7 @@ const ApprovalSetupModal = () => {
   const debounceTimeout = useRef(null);
   const hasRun = useRef(false);
   const approvalSetupModal = useSelector(
-    (state) => state.modal.approvalSetupModal
+    (state) => state.modal.approvalSetupModal,
   );
   const approvalSetup = useSelector((state) => state.modal.approvalSetup);
   const userData = useSelector((state) => state.values.userData);
@@ -155,7 +155,7 @@ const ApprovalSetupModal = () => {
 
   const handleCheckUser = () => {
     const matched = approvalSetup?.approver?.every((app) =>
-      userData?.some((user) => user?.id === app?.approver_id)
+      userData?.some((user) => user?.id === app?.approver_id),
     );
 
     return matched;
@@ -163,7 +163,7 @@ const ApprovalSetupModal = () => {
 
   const handleCheckCharging = () => {
     const matched = chargingData?.some(
-      (item) => item?.code === approvalSetup?.charging_code
+      (item) => item?.code === approvalSetup?.charging_code,
     );
 
     return matched;
@@ -181,10 +181,10 @@ const ApprovalSetupModal = () => {
     const mapUser = {
       approver:
         approvalSetup?.approver?.map((app) =>
-          userData?.find((user) => user?.id === app?.approver_id)
+          userData?.find((user) => user?.id === app?.approver_id),
         ) || [],
       charging: chargingData?.find(
-        (charge) => charge?.code === approvalSetup?.charging_code
+        (charge) => charge?.code === approvalSetup?.charging_code,
       ),
     };
 
@@ -226,12 +226,12 @@ const ApprovalSetupModal = () => {
           item.access_permission
             .split(",")
             .map((p) => p.trim())
-            .includes("approver")
+            .includes("approver"),
         )
         .map((item) => item.id);
 
       const approverUsers = userData?.filter((user) =>
-        idsWithApprover.includes(user.role_id)
+        idsWithApprover.includes(user.role_id),
       );
 
       setFilteredUsers(approverUsers || []);

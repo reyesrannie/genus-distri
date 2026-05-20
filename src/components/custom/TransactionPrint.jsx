@@ -10,7 +10,10 @@ import {
 } from "@mui/material";
 import React, { useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { resetModal } from "../../services/server/slice/modalSlice";
+import {
+  resetModal,
+  setViewBatch,
+} from "../../services/server/slice/modalSlice";
 import { useReactToPrint } from "react-to-print";
 import logoRdf from "../../assets/logoRdf.png";
 
@@ -24,6 +27,7 @@ import { enqueueSnackbar } from "notistack";
 import { resetPrompt } from "../../services/server/slice/promptSlice";
 import { singleError } from "../../services/functions/errorResponse";
 import { orderingAPI } from "../../services/server/api/orderingAPI";
+import BatchOrders from "./BatchOrders";
 
 const TransactionPrint = () => {
   const dispatch = useDispatch();
@@ -33,40 +37,31 @@ const TransactionPrint = () => {
   const access = user?.role?.access_permission?.map((item) => item?.trim());
   const printableModal = useSelector((state) => state.modal.printableModal);
   const ordering = useSelector((state) => state.modal.ordering);
+  const orders = useSelector((state) => state.prompt.orders);
   const mapOrder = { data: ordering?.order };
-  const contentRef = useRef();
+  const contentRefSingle = useRef();
+  const contentRefMultiple = useRef();
 
   const header = [
     { name: "No.", type: "index" },
     {
       name: "Item",
       type: "order-print",
-
       children: [
-        {
-          value: "material",
-          child: "name",
-          orderBy: 1,
-        },
-        {
-          value: "material",
-          child: "code",
-          orderBy: 2,
-        },
-
-        {
-          value: "uom",
-          child: "code",
-          orderBy: 3,
-        },
+        { value: "material", child: "name", orderBy: 1 },
+        { value: "material", child: "code", orderBy: 2 },
+        { value: "uom", child: "code", orderBy: 3 },
       ],
     },
     { name: "Qty.", value: "quantity" },
-
+    { name: "Actual Qty.", value: "" },
     { name: "Remarks", value: "remarks" },
   ];
 
-  const reactToPrintFn = useReactToPrint({ contentRef });
+  const reactToPrintFn = useReactToPrint({ contentRef: contentRefSingle });
+  const reactToPrintFnMultiple = useReactToPrint({
+    contentRef: contentRefMultiple,
+  });
 
   const [serveOrder, { isLoading }] = useServeOrderMutation();
 
@@ -95,204 +90,402 @@ const TransactionPrint = () => {
         },
       }}
     >
-      <DialogContent ref={contentRef}>
-        <Stack position={"absolute"} top={0} right={2}>
-          <IconButton onClick={() => dispatch(resetModal())}>
-            <CloseIcon
-              sx={{
-                fontSize: "20px",
-                "@media print": {
-                  display: "none",
-                },
-              }}
-            />
-          </IconButton>
-        </Stack>
-        <Stack flexDirection={"row"} justifyContent={"space-between"} mb={2}>
-          <Stack>
-            <img
-              src={logoRdf}
-              style={{
-                width: "100px",
-              }}
-            />
+      {/* --- SINGLE PRINTING --- */}
+      {(!orders || orders?.length === 0) && (
+        <DialogContent ref={contentRefSingle}>
+          <Stack position={"absolute"} top={0} right={2}>
+            <IconButton onClick={() => dispatch(resetModal())}>
+              <CloseIcon
+                sx={{
+                  fontSize: "20px",
+                  "@media print": { display: "none" },
+                }}
+              />
+            </IconButton>
           </Stack>
-          <Stack>
-            <Typography
-              fontSize={"16px"}
-              fontWeight={700}
-              sx={{
-                textTransform: "uppercase",
-              }}
-            >
-              Product Request
-            </Typography>
-            <Typography fontSize={"10px"}>
-              {`MIR No: ${ordering?.id}`}
-            </Typography>
-          </Stack>
-        </Stack>
-        <Stack flexDirection={"row"} justifyContent={"space-between"} mb={2}>
-          <Stack gap={0.3}>
-            <Stack flexDirection={"row"} gap={0.5}>
+          <Stack flexDirection={"row"} justifyContent={"space-between"} mb={2}>
+            <Stack>
+              <img src={logoRdf} style={{ width: "100px" }} alt="Logo" />
+            </Stack>
+            <Stack>
               <Typography
-                fontSize={"12px"}
+                fontSize={"16px"}
                 fontWeight={700}
-                sx={{
-                  textTransform: "capitalize",
-                }}
+                sx={{ textTransform: "uppercase" }}
               >
-                Requested By:
+                Product Request
               </Typography>
-              <Typography
-                fontSize={"12px"}
-                sx={{
-                  textTransform: "capitalize",
-                }}
-              >
-                {ordering?.requestor?.name?.toLowerCase()}
+              <Typography fontSize={"10px"}>
+                {`MIR No: ${ordering?.id}`}
               </Typography>
             </Stack>
+          </Stack>
+          <Stack flexDirection={"row"} justifyContent={"space-between"} mb={2}>
+            <Stack gap={0.3}>
+              <Stack flexDirection={"row"} gap={0.5}>
+                <Typography
+                  fontSize={"12px"}
+                  fontWeight={700}
+                  sx={{ textTransform: "capitalize" }}
+                >
+                  Requested By:
+                </Typography>
+                <Typography
+                  fontSize={"12px"}
+                  sx={{ textTransform: "capitalize" }}
+                >
+                  {ordering?.requestor?.name?.toLowerCase()}
+                </Typography>
+              </Stack>
 
-            {ordering?.updated_by !== null && (
+              {ordering?.updated_by !== null && (
+                <Stack flexDirection={"row"} gap={0.5} alignItems={"center"}>
+                  <Typography fontSize={"12px"} fontWeight={700}>
+                    Updated By:
+                  </Typography>
+                  <Typography
+                    fontSize={"12px"}
+                    sx={{ textTransform: "capitalize" }}
+                    color="warning"
+                  >
+                    {ordering?.updated_by?.toLowerCase()}
+                  </Typography>
+                </Stack>
+              )}
+
               <Stack flexDirection={"row"} gap={0.5} alignItems={"center"}>
                 <Typography fontSize={"12px"} fontWeight={700}>
-                  Updated By:
+                  Status:
                 </Typography>
                 <Typography
                   fontSize={"12px"}
                   sx={{
+                    color:
+                      {
+                        approved: "#065F46",
+                        consolidated: "#065F46",
+                        served: "#1E40AF",
+                      }[ordering?.status?.toLowerCase()] || "#A0A0A0",
                     textTransform: "capitalize",
                   }}
-                  color="warning"
                 >
-                  {ordering?.updated_by?.toLowerCase()}
+                  {ordering?.status?.toLowerCase()}
                 </Typography>
               </Stack>
-            )}
 
-            <Stack flexDirection={"row"} gap={0.5} alignItems={"center"}>
-              <Typography fontSize={"12px"} fontWeight={700}>
-                Status:
-              </Typography>
-              <Typography
-                fontSize={"12px"}
-                sx={{
-                  color:
-                    {
-                      approved: "#065F46",
-                      consolidated: "#065F46",
-
-                      served: "#1E40AF",
-                    }[ordering?.status?.toLowerCase()] || "#A0A0A0",
-                  textTransform: "capitalize",
-                }}
-              >
-                {ordering?.status?.toLowerCase()}
-              </Typography>
-            </Stack>
-
-            <Stack>
-              <Typography
-                fontSize={"12px"}
-                fontWeight={700}
-                sx={{
-                  textTransform: "capitalize",
-                }}
-              >
-                Date information
-              </Typography>
-              <Stack flexDirection={"row"} gap={0.5}>
-                <Typography fontSize={"8px"}>Ordered at</Typography>
-                <Typography fontSize={"8px"} fontWeight={700}>
-                  {dayjs(ordering?.date_orderd).format("MMMM DD, YYYY")}
+              <Stack>
+                <Typography
+                  fontSize={"12px"}
+                  fontWeight={700}
+                  sx={{ textTransform: "capitalize" }}
+                >
+                  Date information
                 </Typography>
-              </Stack>
-              <Stack flexDirection={"row"} gap={0.5}>
-                <Typography fontSize={"8px"}>Needed on</Typography>
-                <Typography fontSize={"8px"} fontWeight={700}>
-                  {dayjs(ordering?.date_needed).format("MMMM DD, YYYY")}
-                </Typography>
+                <Stack flexDirection={"row"} gap={0.5}>
+                  <Typography fontSize={"8px"}>Ordered at</Typography>
+                  <Typography fontSize={"8px"} fontWeight={700}>
+                    {dayjs(ordering?.date_orderd).format("MMMM DD, YYYY")}
+                  </Typography>
+                </Stack>
+                <Stack flexDirection={"row"} gap={0.5}>
+                  <Typography fontSize={"8px"}>Needed on</Typography>
+                  <Typography fontSize={"8px"} fontWeight={700}>
+                    {dayjs(ordering?.date_needed).format("MMMM DD, YYYY")}
+                  </Typography>
+                </Stack>
               </Stack>
             </Stack>
-          </Stack>
-          <Stack
-            bgcolor={"#F4F6F8"}
-            flexDirection={"row"}
-            gap={1}
-            padding={1}
-            borderRadius={2}
-          >
-            <Divider
-              orientation="vertical"
-              flexItem
-              sx={{
-                backgroundColor: "#3F51B5",
-                width: "12px",
-                ml: 1,
-              }}
-            />
             <Stack
-              sx={{
-                minWidth: "300px",
-              }}
+              bgcolor={"#F4F6F8"}
+              flexDirection={"row"}
+              gap={1}
+              padding={1}
+              borderRadius={2}
             >
-              <Typography fontSize={"14px"} fontWeight={700} color="#1F2937">
-                Customer
-              </Typography>
-              <Typography
-                fontSize={"10px"}
-                fontWeight={700}
-                color="#111827"
-              >{`${ordering?.customer?.code} - ${ordering?.customer?.name}`}</Typography>
-              <Typography fontSize={"14px"} fontWeight={700} color="#1F2937">
-                Delivery Address
-              </Typography>
-              <Typography
-                fontSize={"10px"}
-                fontWeight={700}
-                color="#111827"
-              >{`${ordering?.customer?.delivery_address}`}</Typography>
+              <Divider
+                orientation="vertical"
+                flexItem
+                sx={{
+                  backgroundColor: "#3F51B5",
+                  width: "12px",
+                  ml: 1,
+                }}
+              />
+              <Stack sx={{ minWidth: "300px" }}>
+                <Typography fontSize={"14px"} fontWeight={700} color="#1F2937">
+                  Customer
+                </Typography>
+                <Typography fontSize={"10px"} fontWeight={700} color="#111827">
+                  {`${ordering?.customer?.code} - ${ordering?.customer?.name}`}
+                </Typography>
+                <Typography fontSize={"14px"} fontWeight={700} color="#1F2937">
+                  Delivery Address
+                </Typography>
+                <Typography fontSize={"10px"} fontWeight={700} color="#111827">
+                  {`${ordering?.customer?.delivery_address}`}
+                </Typography>
+              </Stack>
             </Stack>
           </Stack>
-        </Stack>
 
-        <TableGrid header={header} items={mapOrder} />
-        <Typography fontSize={"10px"} fontWeight={700}>
-          MIS-FRM-19-2001
-        </Typography>
-      </DialogContent>
+          <TableGrid header={header} items={mapOrder} />
+          <Typography fontSize={"10px"} fontWeight={700}>
+            MIS-FRM-19-2001
+          </Typography>
+        </DialogContent>
+      )}
+
+      {/* --- MULTIPLE PRINTING --- */}
+      {orders?.length > 0 && (
+        <DialogContent ref={contentRefMultiple}>
+          {/* Close button placed once at the top of the modal for UI */}
+          <Stack position={"absolute"} top={0} right={2}>
+            <IconButton onClick={() => dispatch(resetModal())}>
+              <CloseIcon
+                sx={{
+                  fontSize: "20px",
+                  "@media print": { display: "none" },
+                }}
+              />
+            </IconButton>
+          </Stack>
+
+          {orders?.map((order, index) => {
+            const mapOrderMultiple = { data: order?.order };
+            return (
+              <Stack
+                key={order.id || index}
+                sx={{
+                  pageBreakAfter: "always",
+                  breakAfter: "page",
+                  "&:last-child": {
+                    pageBreakAfter: "auto",
+                    breakAfter: "auto",
+                  },
+                  mb: 6, // Visual spacing on the screen
+                  // FIX: Add top padding specifically for printed pages after the first one
+                  "@media print": {
+                    pt: index > 0 ? "40px" : 0,
+                  },
+                }}
+              >
+                <Stack
+                  flexDirection={"row"}
+                  justifyContent={"space-between"}
+                  mb={2}
+                >
+                  <Stack>
+                    <img src={logoRdf} style={{ width: "100px" }} alt="Logo" />
+                  </Stack>
+                  <Stack>
+                    <Typography
+                      fontSize={"16px"}
+                      fontWeight={700}
+                      sx={{ textTransform: "uppercase" }}
+                    >
+                      Product Request
+                    </Typography>
+                    <Typography fontSize={"10px"}>
+                      {`MIR No: ${order?.id}`}
+                    </Typography>
+                  </Stack>
+                </Stack>
+
+                {/* ... rest of your layout remains exactly the same ... */}
+
+                <Stack
+                  flexDirection={"row"}
+                  justifyContent={"space-between"}
+                  mb={2}
+                >
+                  <Stack gap={0.3}>
+                    <Stack flexDirection={"row"} gap={0.5}>
+                      <Typography
+                        fontSize={"12px"}
+                        fontWeight={700}
+                        sx={{ textTransform: "capitalize" }}
+                      >
+                        Requested By:
+                      </Typography>
+                      <Typography
+                        fontSize={"12px"}
+                        sx={{ textTransform: "capitalize" }}
+                      >
+                        {order?.requestor?.name?.toLowerCase()}
+                      </Typography>
+                    </Stack>
+
+                    {order?.updated_by !== null && (
+                      <Stack
+                        flexDirection={"row"}
+                        gap={0.5}
+                        alignItems={"center"}
+                      >
+                        <Typography fontSize={"12px"} fontWeight={700}>
+                          Updated By:
+                        </Typography>
+                        <Typography
+                          fontSize={"12px"}
+                          sx={{ textTransform: "capitalize" }}
+                          color="warning"
+                        >
+                          {order?.updated_by?.toLowerCase()}
+                        </Typography>
+                      </Stack>
+                    )}
+
+                    <Stack
+                      flexDirection={"row"}
+                      gap={0.5}
+                      alignItems={"center"}
+                    >
+                      <Typography fontSize={"12px"} fontWeight={700}>
+                        Status:
+                      </Typography>
+                      <Typography
+                        fontSize={"12px"}
+                        sx={{
+                          color:
+                            {
+                              approved: "#065F46",
+                              consolidated: "#065F46",
+                              served: "#1E40AF",
+                            }[order?.status?.toLowerCase()] || "#A0A0A0",
+                          textTransform: "capitalize",
+                        }}
+                      >
+                        {order?.status?.toLowerCase()}
+                      </Typography>
+                    </Stack>
+
+                    <Stack>
+                      <Typography
+                        fontSize={"12px"}
+                        fontWeight={700}
+                        sx={{ textTransform: "capitalize" }}
+                      >
+                        Date information
+                      </Typography>
+                      <Stack flexDirection={"row"} gap={0.5}>
+                        <Typography fontSize={"8px"}>Ordered at</Typography>
+                        <Typography fontSize={"8px"} fontWeight={700}>
+                          {dayjs(order?.date_orderd).format("MMMM DD, YYYY")}
+                        </Typography>
+                      </Stack>
+                      <Stack flexDirection={"row"} gap={0.5}>
+                        <Typography fontSize={"8px"}>Needed on</Typography>
+                        <Typography fontSize={"8px"} fontWeight={700}>
+                          {dayjs(order?.date_needed).format("MMMM DD, YYYY")}
+                        </Typography>
+                      </Stack>
+                    </Stack>
+                  </Stack>
+                  <Stack
+                    bgcolor={"#F4F6F8"}
+                    flexDirection={"row"}
+                    gap={1}
+                    padding={1}
+                    borderRadius={2}
+                  >
+                    <Divider
+                      orientation="vertical"
+                      flexItem
+                      sx={{
+                        backgroundColor: "#3F51B5",
+                        width: "12px",
+                        ml: 1,
+                      }}
+                    />
+                    <Stack sx={{ minWidth: "300px" }}>
+                      <Typography
+                        fontSize={"14px"}
+                        fontWeight={700}
+                        color="#1F2937"
+                      >
+                        Customer
+                      </Typography>
+                      <Typography
+                        fontSize={"10px"}
+                        fontWeight={700}
+                        color="#111827"
+                      >
+                        {`${order?.customer?.code} - ${order?.customer?.name}`}
+                      </Typography>
+                      <Typography
+                        fontSize={"14px"}
+                        fontWeight={700}
+                        color="#1F2937"
+                      >
+                        Delivery Address
+                      </Typography>
+                      <Typography
+                        fontSize={"10px"}
+                        fontWeight={700}
+                        color="#111827"
+                      >
+                        {`${order?.customer?.delivery_address}`}
+                      </Typography>
+                    </Stack>
+                  </Stack>
+                </Stack>
+
+                <TableGrid header={header} items={mapOrderMultiple} />
+                <Typography fontSize={"10px"} fontWeight={700}>
+                  MIS-FRM-19-2001
+                </Typography>
+              </Stack>
+            );
+          })}
+        </DialogContent>
+      )}
+
       {access?.includes("printing") && (
         <DialogActions
           sx={{
-            "@media print": {
-              display: "none",
-            },
-
+            "@media print": { display: "none" },
             display: "flex",
             justifyContent: "space-between",
           }}
         >
-          {serveOrdering && (
-            <Button
-              color="success"
-              variant="contained"
-              onClick={() => handleServe()}
-              loading={isLoading}
-              disabled={ordering?.status?.toLowerCase() === "consolidated"}
-            >
-              Consolidate
-            </Button>
-          )}
+          {serveOrdering &&
+            ordering?.status?.toLowerCase() !== "consolidated" && (
+              <Button
+                color="success"
+                variant="contained"
+                onClick={() => handleServe()}
+                loading={isLoading}
+              >
+                Consolidate
+              </Button>
+            )}
+
+          {serveOrdering &&
+            ordering?.status?.toLowerCase() === "consolidated" &&
+            ordering?.order_type === "BATCHING" && (
+              <Button
+                color="info"
+                variant="contained"
+                onClick={() => dispatch(setViewBatch(true))}
+                loading={isLoading}
+              >
+                View Batch
+              </Button>
+            )}
           <Button
             color="info"
             startIcon={<LocalPrintshopOutlinedIcon />}
-            onClick={reactToPrintFn}
+            onClick={() =>
+              !orders || orders?.length === 0
+                ? reactToPrintFn()
+                : reactToPrintFnMultiple()
+            }
           >
             Print
           </Button>
         </DialogActions>
       )}
+
+      <BatchOrders />
     </Dialog>
   );
 };

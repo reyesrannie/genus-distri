@@ -5,8 +5,8 @@ const useParamsHookTransaction = () => {
     status: "pending",
     page: 1,
     per_page: 10,
-    pagination: null,
-    sorts: null,
+    pagination: "",
+    sorts: "",
   });
 
   const onPageChange = (_, page) => {

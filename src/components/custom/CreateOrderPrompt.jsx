@@ -53,6 +53,7 @@ const CreateOrderPrompt = ({ resetFn = () => {} }) => {
 
   const payloadData = useSelector((state) => state.prompt.payloadData);
   const ordering = useSelector((state) => state.modal.ordering);
+  const forApproval = useSelector((state) => state.modal.forApproval);
 
   const mapOrder = { data: payloadData?.order };
 
@@ -92,8 +93,14 @@ const CreateOrderPrompt = ({ resetFn = () => {} }) => {
     try {
       const res =
         ordering === null
-          ? await createOrder({ ...payloadData, status: "PENDING" }).unwrap()
-          : await updateOrder({ ...payloadData, status: "PENDING" }).unwrap();
+          ? await createOrder({
+              ...payloadData,
+              status: forApproval ? "PENDING" : "APPROVED",
+            }).unwrap()
+          : await updateOrder({
+              ...payloadData,
+              status: forApproval ? "PENDING" : "APPROVED",
+            }).unwrap();
       enqueueSnackbar(res?.message, {
         variant: "success",
       });
