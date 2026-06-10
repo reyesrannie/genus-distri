@@ -10,7 +10,10 @@ import TableGrid from "../../components/custom/TableGrid";
 import BreadCrumbs from "../../components/custom/BreadCrumbs";
 
 import "../../components/styles/MasterList.scss";
-import { useOrderQuery } from "../../services/server/api/orderingAPI";
+import {
+  useLazyUmdQuery,
+  useOrderQuery,
+} from "../../services/server/api/orderingAPI";
 import AppSearch from "../../components/custom/AppSearch";
 import useParamsHookTransaction from "../../services/hooks/useParamsHookTransaction";
 import OrderStatusChanger from "../../components/custom/OrderStatusChanger";
@@ -177,6 +180,7 @@ const Ordering = () => {
                   if (i?.status?.toLowerCase() === "return") {
                     dispatch(setViewRemarks(true));
                   } else {
+                    i?.order_type === "BATCHING" && dispatch(setPoOrder(true));
                     setAnchorEl({
                       mouseX: e.clientX,
                       mouseY: e.clientY,

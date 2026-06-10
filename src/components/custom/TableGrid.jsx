@@ -46,7 +46,12 @@ const TableGrid = ({
         </TableHead>
         <TableBody>
           {items?.data?.map((i, ind) => {
+            // Find the selected order
             const order = orders?.find((o) => o.id === i.id);
+
+            // Renamed 'order' to 'ord' inside the loop to avoid conflicting with the 'order' variable above
+            const isCompleted =
+              i?.umd_order?.every((ord) => ord?.remaining <= 0) ?? false;
 
             return (
               <TableRow
@@ -65,6 +70,16 @@ const TableGrid = ({
                 }}
               >
                 {header?.map((head, index) => {
+                  const safeStringValue = i[head?.value]
+                    ?.toString()
+                    ?.toLowerCase();
+                  const chipStatus =
+                    i?.umd_order?.length === 0
+                      ? safeStringValue
+                      : isCompleted
+                        ? "delivered"
+                        : "partially delivered";
+
                   return (
                     <TableCell
                       key={index}
@@ -90,12 +105,15 @@ const TableGrid = ({
                             }}
                           />
                         )}
+
                       {head?.type === undefined && (
                         <Typography>{i[head?.value]}</Typography>
                       )}
+
                       {head?.type === "index" && (
                         <Typography>{ind + 1}</Typography>
                       )}
+
                       {head?.type === "status" && (
                         <Chip
                           label={i[head?.value]?.toLowerCase()}
@@ -155,6 +173,73 @@ const TableGrid = ({
                           }}
                         />
                       )}
+
+                      {head?.type === "umdStatus" && (
+                        <Chip
+                          label={chipStatus}
+                          sx={{
+                            bgcolor:
+                              {
+                                pending: "#FEF3C7",
+                                approved: "#D1FAE5",
+                                reject: "#FEE2E2",
+                                completed: "#DBEAFE",
+                                return: "#FFE4E1",
+                                rejected: "#FFE4E1",
+                                served: "#EDE9FE",
+                                consolidated: "#E0E7FF",
+                                "ready for preparation": "#FEF3C7",
+                                "ready to sync": "#E0F2FE",
+                                "ready to pick-up": "#E7F5FF",
+                                "ready to deliver": "#E7F5FF",
+                                delivered: "#CCFBF1",
+                                "partially delivered": "#FED7AA",
+                              }[chipStatus] || "#F3F4F6",
+
+                            color:
+                              {
+                                pending: "#92400E",
+                                approved: "#065F46",
+                                reject: "#7F1D1D",
+                                completed: "#1E40AF",
+                                return: "#B22222",
+                                rejected: "#B22222",
+                                consolidated: "#3730A3",
+                                "ready for preparation": "#92400E",
+                                "ready to sync": "#0284C7",
+                                "ready to pick-up": "#0369A1",
+                                "ready to deliver": "#0369A1",
+                                delivered: "#115E59",
+                                "partially delivered": "#9A3412",
+                              }[chipStatus] || "#111827",
+
+                            border: "1px solid",
+                            borderColor:
+                              {
+                                pending: "#FBBF24",
+                                approved: "#34D399",
+                                reject: "#F87171",
+                                completed: "#60A5FA",
+                                return: "#FF7F7F",
+                                rejected: "#FF7F7F",
+                                consolidated: "#A5B4FC",
+                                "ready for preparation": "#FBBF24",
+                                "ready to sync": "#7DD3FC",
+                                "ready to pick-up": "#38BDF8",
+                                "ready to deliver": "#38BDF8",
+                                delivered: "#2DD4BF",
+                                "partially delivered": "#F97316",
+                              }[chipStatus] || "#D1D5DB",
+
+                            padding: "2px 10px",
+                            borderRadius: "9999px",
+                            fontSize: "0.875rem",
+                            fontWeight: 500,
+                            textTransform: "capitalize",
+                          }}
+                        />
+                      )}
+
                       {head?.type === "multimedia" && (
                         <Stack
                           gap={1}
@@ -164,6 +249,7 @@ const TableGrid = ({
                           <Typography>{i[head?.value]}</Typography>
                         </Stack>
                       )}
+
                       {head?.type === "time" && (
                         <Typography>
                           {dayjs(
@@ -179,6 +265,7 @@ const TableGrid = ({
                           )}
                         </Typography>
                       )}
+
                       {head?.type === "parent" && (
                         <Typography>{i[head.value]?.[head.child]}</Typography>
                       )}
@@ -193,6 +280,7 @@ const TableGrid = ({
                           <InsertLinkOutlinedIcon />
                         </IconButton>
                       )}
+
                       {head?.type === "stack" && (
                         <Stack>
                           <Typography fontWeight={700}>
@@ -216,6 +304,7 @@ const TableGrid = ({
                           </Typography>
                         </Stack>
                       )}
+
                       {head?.type === "stackNoStyle" && (
                         <Stack>
                           <Typography>{i[head?.primary]}</Typography>
@@ -245,7 +334,7 @@ const TableGrid = ({
 
                                   color:
                                     {
-                                      1: "##1F2937",
+                                      1: "#1F2937", // FIXED: Removed double ## here
                                     }[child?.orderBy] || "#4B5563",
                                 }}
                               >

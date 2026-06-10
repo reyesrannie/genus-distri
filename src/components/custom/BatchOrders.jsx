@@ -32,24 +32,22 @@ const BatchOrders = () => {
   const dispatch = useDispatch();
 
   const ordering = useSelector((state) => state.modal.ordering);
+  const batchData = useSelector((state) => state.modal.batchData);
   const viewBatch = useSelector((state) => state.modal.viewBatch);
 
-  const mapOrder = { data: ordering?.umd_order };
-
   const header = [
-    { name: "No.", type: "index" },
     {
       name: "Item",
-      type: "order-print",
-      children: [
-        { value: "material", child: "name", orderBy: 1 },
-        { value: "material", child: "code", orderBy: 2 },
-        { value: "uom", child: "code", orderBy: 3 },
-      ],
+      value: "item_code",
     },
-    { name: "Qty.", value: "quantity" },
-    { name: "Actual Qty.", value: "" },
-    { name: "Remarks", value: "remarks" },
+    {
+      name: "Description",
+      value: "description",
+    },
+    { name: "Ordered", value: "ordered" },
+    { name: "Served Qty.", value: "served" },
+    { name: "Remaining", value: "remaining" },
+    { name: "Move Order Date", value: "move_order_date", type: "date" },
   ];
 
   return (
@@ -73,7 +71,7 @@ const BatchOrders = () => {
         </IconButton>
       </Stack>
       <DialogContent>
-        <TableGrid header={header} items={mapOrder} />
+        <TableGrid header={header} items={{ data: batchData }} />
       </DialogContent>
       <DialogActions sx={{ justifyContent: "right", mb: 2 }}>
         <Button

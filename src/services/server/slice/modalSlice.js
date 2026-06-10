@@ -49,6 +49,7 @@ const initialState = {
   serveOrdering: false,
   printableModal: false,
   hasRun: false,
+  batchData: [],
 };
 
 const modalSlice = createSlice({
@@ -196,6 +197,9 @@ const modalSlice = createSlice({
     setHasRun: (state, action) => {
       state.hasRun = action.payload;
     },
+    setBatchData: (state, action) => {
+      state.batchData = action.payload;
+    },
     resetModal: () => {
       return initialState;
     },
@@ -250,6 +254,7 @@ export const {
   setPrintableModal,
   setForApproval,
   setHasRun,
+  setBatchData,
   resetModal,
 } = modalSlice.actions;
 

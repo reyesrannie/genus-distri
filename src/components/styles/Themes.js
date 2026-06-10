@@ -246,6 +246,7 @@ export const Themes = () => {
                 "&::-webkit-scrollbar": {
                   display: "none",
                 },
+                "@media print": { maxHeight: "100%" },
               },
             },
           },

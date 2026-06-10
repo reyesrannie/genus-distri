@@ -24,7 +24,7 @@ import {
 } from "../../../services/server/api/arcana/arcanaAPI";
 import useArcanaParamsHook from "../../../services/hooks/useArcanaParamsHook";
 import { useDebounceCallback } from "../../../services/hooks/useDebounceCallBack";
-import { Controller } from "react-hook-form";
+import { Controller, useFieldArray } from "react-hook-form";
 import { MobileDatePicker } from "@mui/x-date-pickers/MobileDatePicker";
 import dayjs from "dayjs";
 import { enqueueSnackbar } from "notistack";
@@ -61,8 +61,6 @@ export const OrderingFields = ({ control, errors, watch, setValue }) => {
   const [getCustomerArcana, { isFetching: fetchArcanaCustomer }] =
     useLazyCustomerQuery();
 
-  const [getProduct, { isError: errorProduct }] = useLazyProductQuery();
-
   useEffect(() => {
     if (charging?.result?.data) {
       dispatch(setChargingData(charging?.result?.data));
@@ -80,14 +78,6 @@ export const OrderingFields = ({ control, errors, watch, setValue }) => {
       dispatch(setTypeData(typeFetch?.value?.distributionTypes));
     }
   }, [type, typeFetch]);
-
-  useEffect(() => {
-    if (errorProduct) {
-      enqueueSnackbar("Failed to fetch products.", {
-        variant: "warning",
-      });
-    }
-  }, [errorProduct]);
 
   const handleSearchArcana = useDebounceCallback((searchValue) => {
     getType({
@@ -114,6 +104,17 @@ export const OrderingFields = ({ control, errors, watch, setValue }) => {
       sp_discount: data?.sp ? `${data?.fixedDiscount}%` : "",
     };
     Object.entries(mappedData).forEach(([key, value]) => setValue(key, value));
+
+    setValue("order", [
+      {
+        id: new Date(),
+        material: null,
+        price: "",
+        quantity: "",
+        selling_price: "",
+        remarks: "",
+      },
+    ]);
   };
 
   return (
@@ -326,8 +327,8 @@ export const OrderingFields = ({ control, errors, watch, setValue }) => {
             statusText = limitReached
               ? "Limit Reached"
               : creditType === "Regular Credit"
-                ? `₱${(c + remainingCreditAllowance + remainingCreditLimit)?.toLocaleString()} , ${d + remainingDayLimit + remainigDayAllowance} day(s) left`
-                : `₱${(c + remainingCreditAllowance + remainingCreditLimit)?.toLocaleString()}`;
+                ? `₱${c <= 0 ? 0 : c?.toLocaleString()} , ${d} day(s) left`
+                : `₱${c <= 0 ? 0 : c?.toLocaleString()}`;
           }
 
           return statusText
@@ -339,13 +340,7 @@ export const OrderingFields = ({ control, errors, watch, setValue }) => {
           handleSearchArcanaCustomer(e?.target?.value);
         }}
         onClose={async () => {
-          dispatch(setProductData([]));
           autoFillFields(watch("customer"));
-          getProduct({
-            isActive: true,
-            PageSize: 100,
-            PriceModeId: watch("customer")?.priceModeId,
-          });
         }}
         renderInput={(params) => (
           <MuiTextField
@@ -411,7 +406,7 @@ export const OrderingFields = ({ control, errors, watch, setValue }) => {
             watch("date_needed") === null
           }
           control={control}
-          name="last_delivery_date"
+          name="last_date_delivery"
           render={({ field }) => (
             <MobileDatePicker
               disabled={

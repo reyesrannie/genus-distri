@@ -1,7 +1,7 @@
 {
   "name": "genus-distri",
   "private": true,
-  "homepage": "/distri_v2",
+  "homepage": "/pretest_distri",
   "version": "2.0.0",
   "type": "module",
   "scripts": {

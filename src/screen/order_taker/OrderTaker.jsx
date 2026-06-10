@@ -90,7 +90,7 @@ const OrderTaker = () => {
     },
     {
       name: "Status",
-      type: "status",
+      type: "umdStatus",
       value: "status",
     },
     {

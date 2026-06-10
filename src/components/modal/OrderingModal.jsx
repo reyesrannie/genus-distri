@@ -16,6 +16,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   resetModal,
+  setForApproval,
   setHasRun,
   setSelectedIndex,
 } from "../../services/server/slice/modalSlice";
@@ -59,6 +60,7 @@ import CreateOrderPrompt from "../custom/CreateOrderPrompt";
 import {
   clearCustomerData,
   setChargingData,
+  setProductData,
 } from "../../services/server/slice/valuesSlice";
 import {
   useLazyOneChargingQuery,
@@ -146,7 +148,7 @@ const OrderingModal = () => {
       tdo: null,
       customer: null,
       date_needed: null,
-      last_delivery_date: null,
+      last_date_delivery: null,
       customer_address: "",
       branch_name: "",
       delivery_address: "",
@@ -236,101 +238,28 @@ const OrderingModal = () => {
     dispatch(setArchive(true));
   };
 
-  const mapTransaction = (product, tdo, customerData) => {
+  const mapTransaction = (tdo, customerData) => {
     if (hasRun) return;
 
     const data = {
       ...mapOrderingData(
         ordering,
         customers,
-        [...product, ...productData],
+        customerData?.clientItems,
         tdo,
         customerData,
       ),
     };
-
     Object.entries(data).forEach(([key, value]) => {
       setValue(key, value);
     });
-
+    handleItemForApproval();
     dispatch(setHasRun(true));
   };
 
   const handleCheckMaterial = async (fetchedCustomer) => {
-    const priceMode = fetchedCustomer?.find(
-      (cust) => cust?.id?.toString() === ordering?.customer?.code,
-    );
-    if (!ordering?.order || ordering.order.length === 0) {
-      return { isValid: false, fetchedMaterials: [] };
-    }
-
-    const newlyFetchedMaterials = [];
-
-    try {
-      const results = await Promise.all(
-        ordering.order.map(async (mats) => {
-          const productName = mats?.material?.name;
-          const productCode = mats?.material?.code;
-
-          if (productData?.some((item) => item?.itemCode === productCode)) {
-            return true;
-          }
-
-          try {
-            const firstAttempt = await getProduct({
-              isActive: true,
-              search: productName,
-              PriceModeId: priceMode?.priceModeId,
-            }).unwrap();
-
-            const matchedItem = firstAttempt?.value?.items?.find(
-              (item) => item?.itemCode === productCode,
-            );
-
-            if (matchedItem) {
-              newlyFetchedMaterials.push(matchedItem);
-              return true;
-            }
-            throw new Error("No exact match by name");
-          } catch (error) {
-            enqueueSnackbar(
-              `Product "${productName}" not found or ambiguous, retrying with code...`,
-              { variant: "info" },
-            );
-
-            try {
-              const secondAttempt = await getProduct({
-                isActive: true,
-                search: productCode,
-                PriceModeId: priceMode?.priceModeId,
-              }).unwrap();
-
-              const matchedItemCode = secondAttempt?.value?.items?.find(
-                (item) => item?.itemCode === productCode,
-              );
-
-              if (matchedItemCode) {
-                newlyFetchedMaterials.push(matchedItemCode);
-                return true;
-              }
-              return false;
-            } catch (secondError) {
-              enqueueSnackbar(`Product "${productCode}" completely missing.`, {
-                variant: "error",
-              });
-              dispatch(resetModal());
-              return false;
-            }
-          }
-        }),
-      );
-
-      const isValid = results.every((res) => res === true);
-
-      return { isValid, fetchedMaterials: newlyFetchedMaterials };
-    } catch (err) {
-      return { isValid: false, fetchedMaterials: [] };
-    }
+    dispatch(setProductData(watch("customer")?.clientItems));
+    return true;
   };
 
   const handleCheckCustomer = async () => {
@@ -346,7 +275,9 @@ const OrderingModal = () => {
 
       const fetchedCustomer = await getClient({
         isActive: true,
+        PageSize: 100,
         DistriTypeId: getDistributionTypeId,
+        TDOId: user?.tdo,
       }).unwrap();
 
       return {
@@ -400,9 +331,9 @@ const OrderingModal = () => {
         await handleCheckCustomer();
       if (!isValid) return;
 
-      const { isValid: isMaterialValid, fetchedMaterials } =
-        await handleCheckMaterial(fetchedCustomer);
-      if (!isMaterialValid) return;
+      // const { isValid: isMaterialValid, fetchedMaterials } =
+      //   await handleCheckMaterial(fetchedCustomer);
+      // if (!isMaterialValid) return;
 
       if (
         !hasRun &&
@@ -412,7 +343,13 @@ const OrderingModal = () => {
           approveOrdering ||
           serveOrdering)
       ) {
-        mapTransaction(fetchedMaterials, fetchedTdo, fetchedCustomer);
+        mapTransaction(
+          fetchedTdo,
+          fetchedCustomer?.find(
+            (cust) =>
+              cust?.id?.toString() === ordering?.customer?.code.toString(),
+          ),
+        );
       }
     };
 
@@ -474,6 +411,63 @@ const OrderingModal = () => {
     resetClient();
     resetTDO();
     resetProduct();
+  };
+
+  const handleItemForApproval = () => {
+    const discountPercentage =
+      Number(String(watch("reg_discount") || "0").replace(/%/g, "")) +
+      Number(String(watch("sp_discount") || "0").replace(/%/g, ""));
+
+    const projectedTotalAmount = watch("order")?.reduce((sum, item, idx) => {
+      const itemPrice = Number(String(item?.price || "0").replace(/,/g, ""));
+      const itemQty = Number(String(item?.quantity || "0").replace(/,/g, ""));
+      return sum + itemPrice * itemQty;
+    }, 0);
+
+    const projectedDiscount = projectedTotalAmount * (discountPercentage / 100);
+    const total = projectedTotalAmount - projectedDiscount;
+
+    const {
+      creditType,
+      remainingCredits: c,
+      remainingDays: d,
+      creditLimit,
+      remainigDayAllowance,
+      remainingDayLimit,
+      remainingCreditLimit,
+      remainingCreditAllowance,
+    } = watch("customer") || {};
+
+    const isCOD = watch("customer")?.creditType === null;
+    if (isCOD) {
+      dispatch(setForApproval(false));
+    } else if (creditType === "Credit - Days") {
+      dispatch(
+        setForApproval(
+          d <= 0 && remainigDayAllowance <= 0 && remainingDayLimit <= 0
+            ? true
+            : false,
+        ),
+      );
+    } else if (
+      creditType === "Regular Credit" ||
+      creditType === "Credit - Amount"
+    ) {
+      dispatch(
+        setForApproval(
+          (c <= 0 &&
+            remainingCreditLimit <= 0 &&
+            remainingCreditAllowance <= 0) ||
+            (creditType === "Regular Credit" &&
+              d <= 0 &&
+              remainigDayAllowance <= 0 &&
+              remainingDayLimit <= 0) ||
+            total > c
+            ? true
+            : false,
+        ),
+      );
+    }
   };
 
   return (
@@ -588,7 +582,7 @@ const OrderingModal = () => {
                       watch("charging") === null ||
                       watch("customer") === null ||
                       loadingProduct ||
-                      (poOrder && watch("last_delivery_date") === null)
+                      (poOrder && watch("last_date_delivery") === null)
                     }
                     startIcon={<ShoppingCartCheckoutOutlinedIcon />}
                     size="small"

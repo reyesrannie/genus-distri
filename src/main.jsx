@@ -11,11 +11,11 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <Provider store={store}>
-      <BrowserRouter basename="/distri_v2">
+      <BrowserRouter basename="/pretest_distri">
         <LocalizationProvider dateAdapter={AdapterDayjs}>
           <App />
         </LocalizationProvider>
       </BrowserRouter>
     </Provider>
-  </StrictMode>
+  </StrictMode>,
 );

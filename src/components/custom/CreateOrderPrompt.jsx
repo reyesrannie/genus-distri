@@ -237,6 +237,9 @@ const CreateOrderPrompt = ({ resetFn = () => {} }) => {
             {archive && "Archive/Reject Order"}
             {serve && "Serve Order"}
           </Typography>
+          <Typography color="warning.main" fontWeight={600} fontSize={16}>
+            {forApproval && !approve && "This order is subject for approval."}
+          </Typography>
           <Typography>
             Would you like to {approve && "approve"}
             {create && "create"}

@@ -1,4 +1,5 @@
 import { serverAPI } from "../request/serverAPI";
+import { setBatchData } from "../slice/modalSlice";
 
 export const orderingAPI = serverAPI.injectEndpoints({
   endpoints: (builder) => ({
@@ -11,6 +12,7 @@ export const orderingAPI = serverAPI.injectEndpoints({
       }),
       providesTags: ["Order"],
     }),
+
     createOrder: builder.mutation({
       query: (payload) => ({
         url: `/transaction`,
@@ -43,12 +45,29 @@ export const orderingAPI = serverAPI.injectEndpoints({
       }),
       invalidatesTags: ["Order"],
     }),
+    umd: builder.query({
+      transformResponse: (response) => response,
+      query: (payload) => ({
+        url: `/umd/${payload?.id}`,
+        method: "GET",
+        params: payload,
+      }),
+      async onQueryStarted(payload, { dispatch, getState, queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
+          if (data?.result?.orders)
+            dispatch(setBatchData(data?.result?.orders));
+          else dispatch(setBatchData(data?.result));
+        } catch (error) {}
+      },
+    }),
   }),
 });
 
 export const {
   useOrderQuery,
   useLazyOrderQuery,
+  useLazyUmdQuery,
   useCreateOrderMutation,
   useUpdateOrderMutation,
   useArchiveOrderMutation,

@@ -26,7 +26,10 @@ import { useServeOrderMutation } from "../../services/server/api/orderTakerAPI";
 import { enqueueSnackbar } from "notistack";
 import { resetPrompt } from "../../services/server/slice/promptSlice";
 import { singleError } from "../../services/functions/errorResponse";
-import { orderingAPI } from "../../services/server/api/orderingAPI";
+import {
+  orderingAPI,
+  useLazyUmdQuery,
+} from "../../services/server/api/orderingAPI";
 import BatchOrders from "./BatchOrders";
 
 const TransactionPrint = () => {
@@ -38,7 +41,21 @@ const TransactionPrint = () => {
   const printableModal = useSelector((state) => state.modal.printableModal);
   const ordering = useSelector((state) => state.modal.ordering);
   const orders = useSelector((state) => state.prompt.orders);
-  const mapOrder = { data: ordering?.order };
+  const mapOrder = {
+    data: ordering?.order?.map((orders) => {
+      const umdMatch = ordering?.umd_order?.find(
+        (umd) =>
+          umd?.item_code?.toString() === orders?.material?.code?.toString(),
+      );
+      return {
+        ...orders,
+        quantity_serve: umdMatch ? umdMatch.served : 0,
+        remaining: umdMatch ? umdMatch.remaining : orders.quantity,
+        move_order_date: umdMatch ? umdMatch.move_order_date : null,
+      };
+    }),
+  };
+
   const contentRefSingle = useRef();
   const contentRefMultiple = useRef();
 
@@ -53,8 +70,16 @@ const TransactionPrint = () => {
         { value: "uom", child: "code", orderBy: 3 },
       ],
     },
-    { name: "Qty.", value: "quantity" },
+    { name: "Qty. Ordered", value: "quantity" },
+    ...(ordering?.order_type === "BATCHING"
+      ? [{ name: "Qty. Delivered", value: "quantity_serve" }]
+      : []),
+    ...(ordering?.order_type === "BATCHING"
+      ? [{ name: "Actual Remaining", value: "remaining" }]
+      : []),
+
     { name: "Actual Qty.", value: "" },
+
     { name: "Remarks", value: "remarks" },
   ];
 
@@ -251,7 +276,48 @@ const TransactionPrint = () => {
           </Stack>
 
           {orders?.map((order, index) => {
-            const mapOrderMultiple = { data: order?.order };
+            const mapOrderMultiple = {
+              data: order?.order?.map((ords) => {
+                const umdMatch = order?.umd_order?.find(
+                  (umd) =>
+                    umd?.item_code?.toString() ===
+                    ords?.material?.code?.toString(),
+                );
+
+                return {
+                  ...ords,
+                  quantity_serve: umdMatch ? umdMatch.served : 0,
+                  remaining: umdMatch ? umdMatch.remaining : order.quantity,
+                  move_order_date: umdMatch ? umdMatch.move_order_date : null,
+                };
+              }),
+            };
+
+            const headerMultiple = [
+              { name: "No.", type: "index" },
+              {
+                name: "Item",
+                type: "order-print",
+                children: [
+                  { value: "material", child: "name", orderBy: 1 },
+                  { value: "material", child: "code", orderBy: 2 },
+                  { value: "uom", child: "code", orderBy: 3 },
+                ],
+              },
+
+              { name: "Qty. Ordered", value: "quantity" },
+              ...(order?.order_type === "BATCHING"
+                ? [{ name: "Qty. Delivered", value: "quantity_serve" }]
+                : []),
+              ...(order?.order_type === "BATCHING"
+                ? [{ name: "Actual Remaining", value: "remaining" }]
+                : []),
+
+              { name: "Actual Qty.", value: "" },
+
+              { name: "Remarks", value: "remarks" },
+            ];
+
             return (
               <Stack
                 key={order.id || index}
@@ -429,7 +495,7 @@ const TransactionPrint = () => {
                   </Stack>
                 </Stack>
 
-                <TableGrid header={header} items={mapOrderMultiple} />
+                <TableGrid header={headerMultiple} items={mapOrderMultiple} />
                 <Typography fontSize={"10px"} fontWeight={700}>
                   MIS-FRM-19-2001
                 </Typography>
@@ -459,18 +525,20 @@ const TransactionPrint = () => {
               </Button>
             )}
 
-          {serveOrdering &&
+          {/* {serveOrdering &&
             ordering?.status?.toLowerCase() === "consolidated" &&
             ordering?.order_type === "BATCHING" && (
               <Button
                 color="info"
                 variant="contained"
-                onClick={() => dispatch(setViewBatch(true))}
+                onClick={() => {
+                  dispatch(setViewBatch(true));
+                }}
                 loading={isLoading}
               >
                 View Batch
               </Button>
-            )}
+            )} */}
           <Button
             color="info"
             startIcon={<LocalPrintshopOutlinedIcon />}

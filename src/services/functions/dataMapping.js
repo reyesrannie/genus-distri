@@ -7,9 +7,9 @@ export const mapOrderingPayload = (submitData) => {
     reason: submitData.reason,
     status: submitData.status,
     date_needed: dayjs(submitData.date_needed).format("YYYY-MM-DD"),
-    last_delivery_date: dayjs(submitData.last_date_delivery).format(
-      "YYYY-MM-DD",
-    ),
+    last_date_delivery: submitData.last_date_delivery
+      ? dayjs(submitData.last_date_delivery).format("YYYY-MM-DD")
+      : null,
 
     order_type: submitData.order_type,
     customer: {
@@ -316,16 +316,15 @@ export const mapOrderingData = (
   charging,
   productData,
   freshTdoData,
-  arcanaCustomer,
+  cust,
 ) => {
   const charge = charging?.find(
     (char) => char?.charging_code === ordering?.charging?.code,
   );
 
-  const cust = arcanaCustomer?.find(
-    (item) => item?.id?.toString() === ordering?.customer?.code,
-  );
-
+  // const cust = arcanaCustomer?.find(
+  //   (item) => item?.id?.toString() === ordering?.customer?.code,
+  // );
   const customerInfo = {
     branch_name: cust?.businessName,
     customer_address: `${cust?.businessAddress?.houseNumber} ${cust?.businessAddress?.streetName} ${cust?.businessAddress?.barangayName} ${cust?.businessAddress?.city} ${cust?.businessAddress?.province}`,
@@ -336,11 +335,12 @@ export const mapOrderingData = (
   };
 
   const tdoInfo = freshTdoData?.find((tdo) => tdo?.id === cust?.tdoId);
-
   const mapData = {
     order_no: ordering?.order_no || "",
     rush: ordering?.rush || "",
     reason: ordering?.reason || "",
+    po_number: ordering?.customer?.po_number,
+    last_date_delivery: dayjs(new Date(ordering?.last_date_delivery)) || null,
     charging: charge,
     customer: cust,
     tdo: tdoInfo,

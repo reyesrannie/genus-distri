@@ -34,21 +34,10 @@ const OrderingProducts = ({ watch, control, errors, setValue }) => {
   const viewOrdering = useSelector((state) => state.modal.viewOrdering);
   const productData = useSelector((state) => state.values.productData);
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append, remove, replace } = useFieldArray({
     control,
     name: "order",
   });
-
-  const [getProduct, { data: dataCheck, isFetching: fetchingProductArcana }] =
-    useLazyProductQuery();
-
-  const handleSearchArcana = useDebounceCallback((searchValue) => {
-    getProduct({
-      isActive: true,
-      search: searchValue,
-      PriceModeId: 1,
-    });
-  }, 500);
 
   const currentOrders = watch("order") || [];
 
@@ -62,9 +51,6 @@ const OrderingProducts = ({ watch, control, errors, setValue }) => {
   const discountPercentage =
     Number(String(watch("reg_discount") || "0").replace(/%/g, "")) +
     Number(String(watch("sp_discount") || "0").replace(/%/g, ""));
-
-  const totalDiscount = (totalAmount + vatAmount) * (discountPercentage / 100);
-  const grandTotal = totalAmount + vatAmount - totalDiscount;
 
   useEffect(() => {
     const currentOrders = watch("order") || [];
@@ -93,8 +79,6 @@ const OrderingProducts = ({ watch, control, errors, setValue }) => {
               `order.${index}.selling_price`,
               newTotal.toLocaleString("en-US"),
             );
-
-            // setValue(`order.${index}.material`, updatedProduct);
           }
         }
       });
@@ -106,11 +90,28 @@ const OrderingProducts = ({ watch, control, errors, setValue }) => {
   const isCOD = customer?.terms === "COD";
   const hasAmountLimit = customer?.creditLimit != null;
   const hasDaysLimit = customer?.daysLimit != null;
-  const isAmountExceeded = hasAmountLimit && customer?.remainingCredits <= 0;
+  const isAmountExceeded =
+    hasAmountLimit &&
+    customer?.remainingCredits <= 0 &&
+    customer?.remainingCreditAllowance <= 0 &&
+    customer?.remainingCreditLimit <= 0;
   const isDaysExceeded = hasDaysLimit && customer?.hasRemainingDays === false;
   const canOrder = isCOD ? true : !(isAmountExceeded || isDaysExceeded);
 
-  const handleItemForApproval = (total) => {
+  const handleItemForApproval = () => {
+    const discountPercentage =
+      Number(String(watch("reg_discount") || "0").replace(/%/g, "")) +
+      Number(String(watch("sp_discount") || "0").replace(/%/g, ""));
+
+    const projectedTotalAmount = watch("order")?.reduce((sum, item, idx) => {
+      const itemPrice = Number(String(item?.price || "0").replace(/,/g, ""));
+      const itemQty = Number(String(item?.quantity || "0").replace(/,/g, ""));
+      return sum + itemPrice * itemQty;
+    }, 0);
+
+    const projectedDiscount = projectedTotalAmount * (discountPercentage / 100);
+    const total = projectedTotalAmount - projectedDiscount;
+
     const {
       creditType,
       remainingCredits: c,
@@ -185,10 +186,9 @@ const OrderingProducts = ({ watch, control, errors, setValue }) => {
                     serveOrdering ||
                     !canOrder
                   }
-                  loading={fetchingProductArcana}
                   control={control}
                   name={`order.${index}.material`}
-                  options={productData || []}
+                  options={watch("customer")?.clientItems || []}
                   getOptionLabel={(option) =>
                     `${option?.itemCode} - ${option?.itemDescription}`
                   }
@@ -200,14 +200,9 @@ const OrderingProducts = ({ watch, control, errors, setValue }) => {
                       (order) => order.material?.itemCode === option.itemCode,
                     );
                   }}
-                  onKeyUp={(e) => {
-                    handleSearchArcana(e?.target?.value);
-                  }}
                   onClose={() => {
                     const selectedMaterial = watch(`order.${index}.material`);
-                    const rawPrice = Number(
-                      selectedMaterial?.currentPrice || 0,
-                    );
+                    const rawPrice = Number(selectedMaterial?.price || 0);
 
                     setValue(
                       `order.${index}.price`,
@@ -252,12 +247,7 @@ const OrderingProducts = ({ watch, control, errors, setValue }) => {
                 />
                 <AppTextBox
                   price
-                  disabled={
-                    approveOrdering ||
-                    viewOrdering ||
-                    serveOrdering ||
-                    !canOrder
-                  }
+                  disabled={true}
                   control={control}
                   name={`order.${index}.price`}
                   size="small"
@@ -297,11 +287,6 @@ const OrderingProducts = ({ watch, control, errors, setValue }) => {
                         return sum + itemPrice * itemQty;
                       }, 0);
 
-                    const projectedDiscount =
-                      projectedTotalAmount * (discountPercentage / 100);
-                    const projectedGrandTotal =
-                      projectedTotalAmount - projectedDiscount;
-
                     // --- LOGIC APPLIED HERE AS WELL ---
                     const isCOD = customer?.terms === "COD";
                     const hasAmountLimit = customer?.creditLimit != null;
@@ -309,7 +294,7 @@ const OrderingProducts = ({ watch, control, errors, setValue }) => {
                     if (
                       !isCOD &&
                       hasAmountLimit &&
-                      projectedGrandTotal >
+                      projectedTotalAmount >
                         customer?.remainingCredits +
                           customer?.remainingCreditAllowance +
                           customer?.remainingCreditLimit
@@ -335,7 +320,7 @@ const OrderingProducts = ({ watch, control, errors, setValue }) => {
                           maximumFractionDigits: 2,
                         },
                       );
-                      handleItemForApproval(projectedGrandTotal);
+                      handleItemForApproval();
                       setValue(`order.${index}.selling_price`, formattedTotal);
                     }
                   }}
@@ -389,11 +374,6 @@ const OrderingProducts = ({ watch, control, errors, setValue }) => {
                         return sum + itemPrice * itemQty;
                       }, 0);
 
-                    const projectedDiscount =
-                      projectedTotalAmount * (discountPercentage / 100);
-                    const projectedGrandTotal =
-                      projectedTotalAmount - projectedDiscount;
-
                     // --- LOGIC APPLIED HERE AS WELL ---
                     const isCOD = customer?.terms === "COD";
                     const hasAmountLimit = customer?.creditLimit != null;
@@ -401,15 +381,13 @@ const OrderingProducts = ({ watch, control, errors, setValue }) => {
                     if (
                       !isCOD &&
                       hasAmountLimit &&
-                      projectedGrandTotal >
+                      projectedTotalAmount >
                         customer?.remainingCredits +
                           customer?.remainingCreditAllowance +
                           customer?.remainingCreditLimit
                     ) {
                       setValue(`order.${index}.quantity`, "");
                       setValue(`order.${index}.selling_price`, "");
-
-                      //dito lagay yung for approval
 
                       enqueueSnackbar(
                         `Credit limit reached! Available balance: ₱${(
@@ -429,7 +407,7 @@ const OrderingProducts = ({ watch, control, errors, setValue }) => {
                           maximumFractionDigits: 2,
                         },
                       );
-                      handleItemForApproval(projectedGrandTotal);
+                      handleItemForApproval();
                       setValue(`order.${index}.selling_price`, formattedTotal);
                     }
                   }}
@@ -497,6 +475,7 @@ const OrderingProducts = ({ watch, control, errors, setValue }) => {
                     disabled={watch("order")?.length === 1}
                     onClick={() => {
                       remove(index);
+                      handleItemForApproval();
                     }}
                   >
                     <RemoveCircleOutlineOutlinedIcon
@@ -519,7 +498,10 @@ const OrderingProducts = ({ watch, control, errors, setValue }) => {
         })}
         {(createOrdering || updateOrdering) && (
           <Button
-            disabled={!canOrder}
+            disabled={
+              !canOrder ||
+              watch("customer")?.clientItems?.length === fields.length
+            }
             variant="contained"
             onClick={() => {
               append({
