@@ -103,14 +103,11 @@ const OrderingProducts = ({ watch, control, errors, setValue }) => {
       Number(String(watch("reg_discount") || "0").replace(/%/g, "")) +
       Number(String(watch("sp_discount") || "0").replace(/%/g, ""));
 
-    const projectedTotalAmount = watch("order")?.reduce((sum, item, idx) => {
+    const total = watch("order")?.reduce((sum, item, idx) => {
       const itemPrice = Number(String(item?.price || "0").replace(/,/g, ""));
       const itemQty = Number(String(item?.quantity || "0").replace(/,/g, ""));
       return sum + itemPrice * itemQty;
     }, 0);
-
-    const projectedDiscount = projectedTotalAmount * (discountPercentage / 100);
-    const total = projectedTotalAmount - projectedDiscount;
 
     const {
       creditType,

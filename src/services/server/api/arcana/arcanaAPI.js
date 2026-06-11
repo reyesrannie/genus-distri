@@ -35,6 +35,7 @@ export const arcanaMTApi = arcanaMTBaseApi.injectEndpoints({
         method: "GET",
         params: payload,
       }),
+      providesTags: ["ArcanaCustomer"],
       async onQueryStarted(payload, { dispatch, getState, queryFulfilled }) {
         try {
           const { data } = await queryFulfilled;
@@ -60,6 +61,22 @@ export const arcanaMTApi = arcanaMTBaseApi.injectEndpoints({
         dispatch(setIsLoading(false));
       },
     }),
+    useSP: builder.mutation({
+      query: (payload) => ({
+        url: `/ClientX/external/use/${payload.specialDiscountId}`,
+        method: "PATCH",
+        body: payload.specialDiscountId,
+      }),
+      invalidatesTags: ["ArcanaCustomer"],
+    }),
+    unUseSP: builder.mutation({
+      query: (payload) => ({
+        url: `/ClientX/external/unuse/${payload.specialDiscountId}`,
+        method: "PATCH",
+        body: payload.specialDiscountId,
+      }),
+      invalidatesTags: ["ArcanaCustomer"],
+    }),
   }),
 });
 
@@ -72,4 +89,6 @@ export const {
   useLazyCustomerQuery,
   useLazyProductQuery,
   useProductQuery,
+  useUseSPMutation,
+  useUnUseSPMutation,
 } = arcanaMTApi;

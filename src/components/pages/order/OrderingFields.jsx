@@ -101,7 +101,11 @@ export const OrderingFields = ({ control, errors, watch, setValue }) => {
       delivery_address: `${data?.deliveryAddress?.houseNumber || ""} ${data?.deliveryAddress?.streetName || ""} ${data?.deliveryAddress?.barangayName || ""} ${data?.deliveryAddress?.city || ""} ${data?.deliveryAddress?.province || ""}`,
       tin: data?.tinNumber,
       reg_discount: data?.fixedDiscount ? `${data?.fixedDiscount}%` : "",
-      sp_discount: data?.sp ? `${data?.fixedDiscount}%` : "",
+      sp_discount: data?.specialDiscountPercentage
+        ? `${data?.specialDiscountPercentage}%`
+        : "",
+      spDiscountId: data?.specialDiscountId || null,
+      isOneTime: data?.isOneTime || false,
     };
     Object.entries(mappedData).forEach(([key, value]) => setValue(key, value));
 

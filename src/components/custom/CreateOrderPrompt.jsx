@@ -5,6 +5,7 @@ import {
   DialogActions,
   DialogContent,
   Divider,
+  keyframes,
   Stack,
   Typography,
 } from "@mui/material";
@@ -39,6 +40,10 @@ import {
   clearCustomerData,
   resetValues,
 } from "../../services/server/slice/valuesSlice";
+import {
+  useUnUseSPMutation,
+  useUseSPMutation,
+} from "../../services/server/api/arcana/arcanaAPI";
 
 const CreateOrderPrompt = ({ resetFn = () => {} }) => {
   const dispatch = useDispatch();
@@ -67,6 +72,15 @@ const CreateOrderPrompt = ({ resetFn = () => {} }) => {
 
   const [approveOrder, { isLoading: loadingApprove }] =
     useApproveOrderMutation();
+
+  const [useSP, { isLoading: loadingUseSP }] = useUseSPMutation();
+  const [unUseSP, { isLoading: loadingUnUseSP }] = useUnUseSPMutation();
+
+  const blinkAnimation = keyframes`
+  0% { opacity: 1; }
+  50% { opacity: 0; }
+  100% { opacity: 1; }
+`;
 
   const header = [
     { name: "No.", type: "index" },
@@ -101,6 +115,12 @@ const CreateOrderPrompt = ({ resetFn = () => {} }) => {
               ...payloadData,
               status: forApproval ? "PENDING" : "APPROVED",
             }).unwrap();
+
+      const spArcana = payloadData?.customer?.isOneTime
+        ? await useSP({
+            specialDiscountId: payloadData?.customer?.spDiscountId,
+          }).unwrap()
+        : null;
       enqueueSnackbar(res?.message, {
         variant: "success",
       });
@@ -237,7 +257,14 @@ const CreateOrderPrompt = ({ resetFn = () => {} }) => {
             {archive && "Archive/Reject Order"}
             {serve && "Serve Order"}
           </Typography>
-          <Typography color="warning.main" fontWeight={600} fontSize={16}>
+          <Typography
+            color="warning.main"
+            fontWeight={600}
+            fontSize={16}
+            sx={{
+              animation: `${blinkAnimation} .6s ease-in-out infinite`,
+            }}
+          >
             {forApproval && !approve && "This order is subject for approval."}
           </Typography>
           <Typography>

@@ -26,6 +26,8 @@ export const mapOrderingPayload = (submitData) => {
         Number(String(submitData?.reg_discount).replace(/%/g, "")) / 100,
       discountSpecial:
         Number(String(submitData?.sp_discount).replace(/%/g, "")) / 100,
+      spDiscountId: submitData?.spDiscountId,
+      isOneTime: submitData?.isOneTime,
     },
     charging:
       submitData.charging?.charging_id !== undefined
@@ -330,8 +332,12 @@ export const mapOrderingData = (
     customer_address: `${cust?.businessAddress?.houseNumber} ${cust?.businessAddress?.streetName} ${cust?.businessAddress?.barangayName} ${cust?.businessAddress?.city} ${cust?.businessAddress?.province}`,
     delivery_address: `${cust?.businessAddress?.houseNumber} ${cust?.businessAddress?.streetName} ${cust?.businessAddress?.barangayName} ${cust?.businessAddress?.city} ${cust?.businessAddress?.province}`,
     tin: cust?.tinNumber,
-    reg_discount: cust?.fixedDiscount ? `${cust?.fixedDiscount}%` : "",
-    sp_discount: cust?.sp ? `${cust?.fixedDiscount}%` : "",
+    reg_discount: ordering?.customer?.discount_reg
+      ? `${parseFloat(ordering?.customer?.discount_reg) * 100}%`
+      : "",
+    sp_discount: ordering?.customer?.discount_special
+      ? `${parseFloat(ordering?.customer?.discount_special) * 100}%`
+      : "",
   };
 
   const tdoInfo = freshTdoData?.find((tdo) => tdo?.id === cust?.tdoId);

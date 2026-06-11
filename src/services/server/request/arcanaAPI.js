@@ -9,8 +9,11 @@ export const arcanaMTBaseApi = createApi({
       const arcanaKey = import.meta.env.VITE_ARCANA_API_KEY;
       headers.set("api-key", arcanaKey);
       headers.set("Accept", "application/json");
+      headers.set("Content-Type", "application/json");
+
       return headers;
     },
   }),
+  tagTypes: ["ArcanaCustomer"],
   endpoints: (builder) => ({}),
 });
