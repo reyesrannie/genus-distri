@@ -11,7 +11,7 @@ const validateDecimalNumber = (value) => {
 };
 
 const orderingSchema = Yup.object({
-  order_no: Yup.string().max(5).required("This is required"),
+  // order_no: Yup.string().max(5).required("This is required"),
   date_needed: Yup.object()
     .required("This is required")
     .typeError("This is required"),

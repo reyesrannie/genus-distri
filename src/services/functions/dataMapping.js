@@ -2,7 +2,7 @@ import dayjs from "dayjs";
 
 export const mapOrderingPayload = (submitData) => {
   const payload = {
-    order_no: submitData.order_no,
+    // order_no: submitData.order_no,
     rush: submitData.rush,
     reason: submitData.reason,
     status: submitData.status,
@@ -342,7 +342,7 @@ export const mapOrderingData = (
 
   const tdoInfo = freshTdoData?.find((tdo) => tdo?.id === cust?.tdoId);
   const mapData = {
-    order_no: ordering?.order_no || "",
+    // order_no: ordering?.order_no || "",
     rush: ordering?.rush || "",
     reason: ordering?.reason || "",
     po_number: ordering?.customer?.po_number,

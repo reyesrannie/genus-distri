@@ -70,9 +70,10 @@ const TableGrid = ({
                 }}
               >
                 {header?.map((head, index) => {
-                  const safeStringValue = i[head?.value]
-                    ?.toString()
-                    ?.toLowerCase();
+                  const safeStringValue =
+                    i[head?.value]?.toString()?.toLowerCase() === "approved"
+                      ? "Ready to Consolidate"
+                      : i[head?.value]?.toString()?.toLowerCase();
                   const chipStatus =
                     i?.umd_order?.length === 0
                       ? safeStringValue
@@ -181,7 +182,7 @@ const TableGrid = ({
                             bgcolor:
                               {
                                 pending: "#FEF3C7",
-                                approved: "#D1FAE5",
+                                "Ready to Consolidate": "#D1FAE5",
                                 reject: "#FEE2E2",
                                 completed: "#DBEAFE",
                                 return: "#FFE4E1",
@@ -199,7 +200,7 @@ const TableGrid = ({
                             color:
                               {
                                 pending: "#92400E",
-                                approved: "#065F46",
+                                "Ready to Consolidate": "#065F46",
                                 reject: "#7F1D1D",
                                 completed: "#1E40AF",
                                 return: "#B22222",
@@ -217,7 +218,7 @@ const TableGrid = ({
                             borderColor:
                               {
                                 pending: "#FBBF24",
-                                approved: "#34D399",
+                                "Ready to Consolidate": "#34D399",
                                 reject: "#F87171",
                                 completed: "#60A5FA",
                                 return: "#FF7F7F",

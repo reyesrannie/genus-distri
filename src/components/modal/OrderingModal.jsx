@@ -140,7 +140,7 @@ const OrderingModal = () => {
   } = useForm({
     resolver: yupResolver(orderingSchema),
     defaultValues: {
-      order_no: "",
+      // order_no: "",
       rush: "",
       reason: "",
       charging: null,
@@ -506,7 +506,7 @@ const OrderingModal = () => {
             color: "white",
           }}
         >
-          {poOrder ? "PO Order" : "Order"}
+          {poOrder ? "P.O. Order" : "Regular Order"}
         </Typography>
       </DialogTitle>
       <form onSubmit={handleSubmit(submitHandler)}>
@@ -574,7 +574,7 @@ const OrderingModal = () => {
                           item?.quantity === null ||
                           item?.quantity === "",
                       ) ||
-                      watch("order_no") === "" ||
+                      // watch("order_no") === "" ||
                       watch("date_needed") === null ||
                       watch("charging") === null ||
                       watch("customer") === null ||

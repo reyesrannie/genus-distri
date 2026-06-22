@@ -47,7 +47,7 @@ const MenuOptions = ({
           <ListItemIcon>
             <AddShoppingCartOutlinedIcon fontSize="small" />
           </ListItemIcon>
-          <ListItemText>Order</ListItemText>
+          <ListItemText>Regular Order</ListItemText>
         </MenuItem>
       )}
       {ordering && (

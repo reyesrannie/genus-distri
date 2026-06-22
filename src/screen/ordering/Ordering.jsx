@@ -63,6 +63,7 @@ const Ordering = () => {
 
   const header = [
     { value: "pending", label: "Pending" },
+    { value: "approved", label: "Ready for Consolidation" },
     { value: "all", label: "History" },
   ];
 
@@ -71,10 +72,10 @@ const Ordering = () => {
       name: "Mir",
       value: "id",
     },
-    {
-      name: "Order no.",
-      value: "order_no",
-    },
+    // {
+    //   name: "Order no.",
+    //   value: "order_no",
+    // },
     {
       name: "Requestor",
       value: "requestor",
@@ -91,7 +92,7 @@ const Ordering = () => {
 
     {
       name: "Status",
-      type: "status",
+      type: "umdStatus",
       value: "status",
     },
     {
@@ -191,7 +192,9 @@ const Ordering = () => {
             : {
                 onSelect: (e, i) => {
                   dispatch(setOrdering(i));
-                  dispatch(setPrintableModal(true));
+                  params?.status === "approved"
+                    ? dispatch(setUpdateOrdering(true))
+                    : dispatch(setPrintableModal(true));
                 },
               })}
         />

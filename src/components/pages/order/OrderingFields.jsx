@@ -132,14 +132,14 @@ export const OrderingFields = ({ control, errors, watch, setValue }) => {
         borderRadius: 2,
       }}
     >
-      <AppTextBox
+      {/* <AppTextBox
         disabled={approveOrdering || viewOrdering || serveOrdering}
         control={control}
         name="order_no"
         label="Order No."
         error={Boolean(errors?.order_no)}
         helperText={errors?.order_no?.message}
-      />
+      /> */}
       <Autocomplete
         disabled={approveOrdering || viewOrdering || serveOrdering}
         control={control}
@@ -188,55 +188,6 @@ export const OrderingFields = ({ control, errors, watch, setValue }) => {
         )}
       />
 
-      {/* <Autocomplete
-        disabled={
-          approveOrdering ||
-          viewOrdering ||
-          serveOrdering ||
-          watch("charging") === null
-        }
-        loading={tdoFetch}
-        control={control}
-        name={"tdo"}
-        options={tdoData || []}
-        getOptionLabel={(option) => option?.fullname}
-        isOptionEqualToValue={(option, value) => option?.id === value?.id}
-        onKeyUp={(e) => {
-          handleSearchArcana(e?.target?.value);
-        }}
-        onClose={() => {
-          setValue("type", {
-            id: watch("tdo")?.distributionTypeId,
-            name: watch("tdo")?.distributionType,
-          });
-
-          setValue("customer", null);
-          [
-            "branch_name",
-            "tin",
-            "reg_discount",
-            "sp_discount",
-            "po_number",
-          ].forEach((field) => setValue(field, ""));
-
-          getCustomerArcana({
-            isActive: true,
-            PageSize: 100,
-            DistriTypeId: watch("tdo")?.distributionTypeId,
-            TDOId: watch("tdo")?.id,
-          });
-        }}
-        renderInput={(params) => (
-          <MuiTextField
-            {...params}
-            label="Officer"
-            size="small"
-            variant="outlined"
-            error={Boolean(errors.charging)}
-            helperText={errors.charging?.message}
-          />
-        )}
-      /> */}
       <Autocomplete
         disabled={
           approveOrdering ||

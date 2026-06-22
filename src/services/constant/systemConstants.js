@@ -108,11 +108,11 @@ const exportHeader = [
     value: "id",
     source: "transaction",
   },
-  {
-    name: "Order No.",
-    value: "order_no",
-    source: "transaction",
-  },
+  // {
+  //   name: "Order No.",
+  //   value: "order_no",
+  //   source: "transaction",
+  // },
   {
     name: "Date Ordered",
     value: "date_ordered",
