@@ -2,7 +2,7 @@ import { useState } from "react";
 
 const useParamsHookOrderTaker = () => {
   const [params, setParams] = useState({
-    status: "today",
+    status: "regular",
     page: 1,
     per_page: 10,
     pagination: undefined,

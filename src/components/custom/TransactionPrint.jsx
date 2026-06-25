@@ -22,7 +22,10 @@ import CloseIcon from "@mui/icons-material/Close";
 
 import TableGrid from "./TableGrid";
 import dayjs from "dayjs";
-import { useServeOrderMutation } from "../../services/server/api/orderTakerAPI";
+import {
+  usePrintOrderMutation,
+  useServeOrderMutation,
+} from "../../services/server/api/orderTakerAPI";
 import { enqueueSnackbar } from "notistack";
 import { resetPrompt } from "../../services/server/slice/promptSlice";
 import { singleError } from "../../services/functions/errorResponse";
@@ -83,16 +86,16 @@ const TransactionPrint = () => {
     { name: "Remarks", value: "remarks" },
   ];
 
-  const reactToPrintFn = useReactToPrint({ contentRef: contentRefSingle });
-  const reactToPrintFnMultiple = useReactToPrint({
-    contentRef: contentRefMultiple,
-  });
-
   const [serveOrder, { isLoading }] = useServeOrderMutation();
+  const [printOrder, { isLoading: loadingPrint }] = usePrintOrderMutation();
 
   const handleServe = async () => {
+    const payload = {
+      id: [ordering?.id],
+    };
+
     try {
-      await serveOrder({ id: ordering?.id }).unwrap();
+      await serveOrder(payload).unwrap();
       enqueueSnackbar("Order consolidated succesfully!", {
         variant: "success",
       });
@@ -103,6 +106,35 @@ const TransactionPrint = () => {
       singleError(error, enqueueSnackbar);
     }
   };
+
+  const handlePrintSingle = async () => {
+    const payload = { id: [ordering?.id] };
+
+    try {
+      await printOrder(payload).unwrap();
+    } catch (error) {}
+    dispatch(resetModal());
+    dispatch(resetPrompt());
+  };
+
+  const handlePrintMultiple = async () => {
+    const payload = { id: orders?.map((items) => items?.id) };
+
+    try {
+      await printOrder(payload).unwrap();
+    } catch (error) {}
+    dispatch(resetModal());
+    dispatch(resetPrompt());
+  };
+
+  const reactToPrintFn = useReactToPrint({
+    contentRef: contentRefSingle,
+    onAfterPrint: handlePrintSingle,
+  });
+  const reactToPrintFnMultiple = useReactToPrint({
+    contentRef: contentRefMultiple,
+    onAfterPrint: handlePrintMultiple,
+  });
 
   return (
     <Dialog
@@ -143,6 +175,22 @@ const TransactionPrint = () => {
               <Typography fontSize={"10px"}>
                 {`MIR No: ${ordering?.id}`}
               </Typography>
+              {ordering?.is_print > 0 && (
+                <Typography
+                  fontSize={"12px"}
+                  fontWeight={800}
+                  color="error"
+                  sx={{
+                    border: "2px solid #d32f2f",
+                    borderRadius: "4px",
+                    px: 1,
+                    mt: 0.5,
+                    letterSpacing: "0.5px",
+                  }}
+                >
+                  RE-PRINT COPY
+                </Typography>
+              )}
             </Stack>
           </Stack>
           <Stack flexDirection={"row"} justifyContent={"space-between"} mb={2}>

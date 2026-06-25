@@ -28,6 +28,14 @@ export const orderTakerAPI = serverAPI.injectEndpoints({
       }),
       invalidatesTags: ["OrderTaker"],
     }),
+    printOrder: builder.mutation({
+      query: (payload) => ({
+        url: `/print/${payload?.id}`,
+        method: "PATCH",
+        body: payload,
+      }),
+      invalidatesTags: ["OrderTaker"],
+    }),
   }),
 });
 
@@ -36,4 +44,5 @@ export const {
   useOrderTakerQuery,
   useServeUpdateOrderMutation,
   useLazyOrderTakerQuery,
+  usePrintOrderMutation,
 } = orderTakerAPI;

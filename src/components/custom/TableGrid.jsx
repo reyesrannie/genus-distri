@@ -1,6 +1,8 @@
 import {
   Checkbox,
   Chip,
+  FormControl,
+  FormControlLabel,
   IconButton,
   Stack,
   Table,
@@ -38,7 +40,32 @@ const TableGrid = ({
             {header?.map((head, index) => {
               return (
                 <TableCell key={index} align={head?.alignHeader}>
-                  <Typography>{head?.name}</Typography>
+                  {head?.headType === undefined && (
+                    <Typography>{head?.name}</Typography>
+                  )}
+
+                  {head?.type === "select" && (
+                    <Stack flexDirection={"row"} alignItems={"center"}>
+                      <Checkbox
+                        sx={{
+                          color: "#FFFFFF",
+                        }}
+                        checked={orders?.length === items?.data?.length}
+                        onChange={() => {
+                          if (orders?.length === items?.data?.length) {
+                            dispatch(setOrders([]));
+                          } else {
+                            dispatch(setOrders(items?.data));
+                          }
+                        }}
+                      />
+                      <Typography noWrap>
+                        {orders?.length !== items?.data?.length
+                          ? "All"
+                          : "Clear"}
+                      </Typography>
+                    </Stack>
+                  )}
                 </TableCell>
               );
             })}
@@ -89,23 +116,20 @@ const TableGrid = ({
                         head?.type === "select" && e.stopPropagation();
                       }}
                     >
-                      {head?.type === "select" &&
-                        i[head.value] === head?.status && (
-                          <Checkbox
-                            checked={!!order}
-                            onChange={() => {
-                              if (order) {
-                                dispatch(
-                                  setOrders(
-                                    orders?.filter((o) => o.id !== i.id),
-                                  ),
-                                );
-                              } else {
-                                dispatch(setOrders([...orders, i]));
-                              }
-                            }}
-                          />
-                        )}
+                      {head?.type === "select" && (
+                        <Checkbox
+                          checked={!!order}
+                          onChange={() => {
+                            if (order) {
+                              dispatch(
+                                setOrders(orders?.filter((o) => o.id !== i.id)),
+                              );
+                            } else {
+                              dispatch(setOrders([...orders, i]));
+                            }
+                          }}
+                        />
+                      )}
 
                       {head?.type === undefined && (
                         <Typography>{i[head?.value]}</Typography>

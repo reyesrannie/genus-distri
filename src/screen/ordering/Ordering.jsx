@@ -182,6 +182,8 @@ const Ordering = () => {
                     dispatch(setViewRemarks(true));
                   } else {
                     i?.order_type === "BATCHING" && dispatch(setPoOrder(true));
+
+                    console.log(i);
                     setAnchorEl({
                       mouseX: e.clientX,
                       mouseY: e.clientY,
@@ -192,6 +194,8 @@ const Ordering = () => {
             : {
                 onSelect: (e, i) => {
                   dispatch(setOrdering(i));
+                  i?.order_type === "BATCHING" && dispatch(setPoOrder(true));
+
                   params?.status === "approved"
                     ? dispatch(setUpdateOrdering(true))
                     : dispatch(setPrintableModal(true));

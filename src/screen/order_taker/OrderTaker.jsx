@@ -22,6 +22,7 @@ import CustomPagination from "../../components/custom/CustomPagination";
 import {
   useLazyOrderTakerQuery,
   useOrderTakerQuery,
+  useServeOrderMutation,
 } from "../../services/server/api/orderTakerAPI";
 import useParamsHookOrderTaker from "../../services/hooks/useParamsHookOrderTaker";
 import TransactionPrint from "../../components/custom/TransactionPrint";
@@ -31,7 +32,11 @@ import { enqueueSnackbar } from "notistack";
 import AppDateFilter from "../../components/custom/AppDateFilter";
 import ClearOutlinedIcon from "@mui/icons-material/ClearOutlined";
 import LocalPrintshopOutlinedIcon from "@mui/icons-material/LocalPrintshopOutlined";
-import { resetPrompt } from "../../services/server/slice/promptSlice";
+import DoneAllIcon from "@mui/icons-material/DoneAll";
+import {
+  resetPrompt,
+  setOrders,
+} from "../../services/server/slice/promptSlice";
 
 const OrderTaker = () => {
   const dispatch = useDispatch();
@@ -59,13 +64,15 @@ const OrderTaker = () => {
   const [getOrder, { isLoading: loadingExport }] = useLazyOrderTakerQuery();
 
   const header = [
-    { value: "today", label: "Today" },
-    { value: "pending", label: "Pending" },
+    { value: "regular", label: "Regular" },
+    { value: "po", label: "P.O" },
+    { value: "consolidated", label: "Consolidated" },
+    { value: "consolidated_po", label: "Consolidated P.O" },
+
     { value: "history", label: "History" },
   ];
 
   const tableHeader = [
-    { name: "", type: "select", value: "status", status: "CONSOLIDATED" },
     {
       name: "Mir",
       value: "id",
@@ -104,6 +111,32 @@ const OrderTaker = () => {
       type: "date",
     },
   ];
+
+  if (params.status !== "history") {
+    tableHeader.unshift({
+      name: "",
+      type: "select",
+      value: "status",
+    });
+  }
+
+  const handleServe = async () => {
+    const payload = {
+      id: orders?.map((items) => items?.id),
+    };
+
+    try {
+      await serveOrder(payload).unwrap();
+      enqueueSnackbar("Order consolidated succesfully!", {
+        variant: "success",
+      });
+      dispatch(orderingAPI.util.invalidateTags(["Order"]));
+      dispatch(resetModal());
+      dispatch(resetPrompt());
+    } catch (error) {
+      singleError(error, enqueueSnackbar);
+    }
+  };
 
   const handleExport = async () => {
     try {
@@ -162,7 +195,10 @@ const OrderTaker = () => {
       >
         <OrderStatusChanger
           params={params}
-          onStatusChange={onStatusChange}
+          onStatusChange={(e) => {
+            dispatch(resetPrompt([]));
+            onStatusChange(e);
+          }}
           header={header}
         />
         <Stack flexDirection={"row"} gap={1}>
@@ -192,31 +228,32 @@ const OrderTaker = () => {
       )}
       {isSuccess && (
         <Stack flexDirection={"row"} alignItems={"flex-start"} pt={1} gap={1}>
-          {orders?.length !== 0 && (
+          {orders?.length !== 0 && params?.status === "regular" && (
             <Button
-              loading={loadingExport}
-              onClick={() => dispatch(resetPrompt())}
+              loading={loadingServe}
+              onClick={() => handleServe()}
               variant="contained"
-              startIcon={<ClearOutlinedIcon />}
-              color="warning"
+              startIcon={<DoneAllIcon />}
+              color="secondary"
               size="small"
             >
-              Clear Selection
+              Consolidate Selected
             </Button>
           )}
-
-          {orders?.length !== 0 && (
-            <Button
-              loading={loadingExport}
-              onClick={() => dispatch(setPrintableModal(true))}
-              variant="contained"
-              startIcon={<LocalPrintshopOutlinedIcon />}
-              color="info"
-              size="small"
-            >
-              Print Selected
-            </Button>
-          )}
+          {orders?.length !== 0 &&
+            (params?.status === "consolidated" ||
+              params?.status === "consolidated_po") && (
+              <Button
+                loading={loadingExport}
+                onClick={() => dispatch(setPrintableModal(true))}
+                variant="contained"
+                startIcon={<LocalPrintshopOutlinedIcon />}
+                color="info"
+                size="small"
+              >
+                Print Selected
+              </Button>
+            )}
           <Button
             loading={loadingExport}
             onClick={() => handleExport()}
